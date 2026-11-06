@@ -1,0 +1,10 @@
+DastaaVault — Your Document, Decoded
+
+Built for the BharatCode Build League hackathon.
+
+Uses the BharatCode API (qwen-3.8-27b) to analyze Indian income tax notices
+and rent agreements. Extracts structured data, flags risks, computes deadlines,
+and explains everything in plain English, Hindi, or Hinglish.
+
+Nothing is stored. PII is masked before any model call.
+This is not legal advice.

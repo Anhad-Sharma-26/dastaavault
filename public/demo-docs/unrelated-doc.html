@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BSES Rajdhani Power Limited — Electricity Bill</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    padding: 30px;
+    font-size: 12px;
+  }
+  .bill-card {
+    background: #fff;
+    max-width: 750px;
+    margin: 0 auto;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 15px; }
+  .logo { font-size: 20px; font-weight: bold; color: #0284c7; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+  .box { background: #f0f9ff; border: 1px solid #bae6fd; padding: 10px; border-radius: 4px; }
+  .amount-banner { background: #0284c7; color: #fff; padding: 12px; text-align: center; border-radius: 6px; font-size: 16px; font-weight: bold; margin: 15px 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
+  th { background: #f1f5f9; }
+</style>
+</head>
+<body>
+<div class="bill-card">
+  <div class="header">
+    <div class="logo">⚡ BSES Rajdhani Power Limited</div>
+    <div><strong>ELECTRICITY CONSUMPTION BILL</strong><br>Bill Month: October 2026</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="box">
+      <strong>Consumer Details:</strong><br>
+      CA Number: 1029384756<br>
+      Name: SANJAY MALHOTRA<br>
+      Address: B-4/112, Safdarjung Enclave, New Delhi - 110029<br>
+      Sanctioned Load: 5.00 kW (Domestic)
+    </div>
+    <div class="box">
+      <strong>Bill Details:</strong><br>
+      Bill Number: BRPL/2026/10/884912<br>
+      Bill Date: 12-10-2026<br>
+      Due Date: 27-10-2026<br>
+      Meter Reading: 14820 kWh (Prev: 14380 kWh)
+    </div>
+  </div>
+
+  <div class="amount-banner">
+    NET AMOUNT PAYABLE: ₹3,410.00 | DUE BY: 27-OCT-2026
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Charges Description</th>
+        <th>Units / Rate</th>
+        <th>Amount (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Energy Charges (0-400 Units @ ₹4.50, >400 @ ₹6.50)</td>
+        <td>440 Units</td>
+        <td>2,460.00</td>
+      </tr>
+      <tr>
+        <td>Fixed Monthly Capacity Charges</td>
+        <td>5 kW @ ₹50/kW</td>
+        <td>250.00</td>
+      </tr>
+      <tr>
+        <td>PPAC (Power Purchase Adjustment Surcharge @ 16%)</td>
+        <td>-</td>
+        <td>433.60</td>
+      </tr>
+      <tr>
+        <td>Electricity Tax (Municipal Tax @ 5%)</td>
+        <td>-</td>
+        <td>135.50</td>
+      </tr>
+      <tr>
+        <td>Govt Subsidy (Delhi Power Scheme)</td>
+        <td>-</td>
+        <td>(0.00)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top: 15px; font-size: 11px; color: #64748b; text-align: center;">
+    Pay on time to avoid disconnection and late payment surcharge. For online payments, visit bsesdelhi.com
+  </p>
+</div>
+</body>
+</html>

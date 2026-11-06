@@ -1,0 +1,55 @@
+{
+  "version": "2026-11-07_v1",
+  "notes": "Typical response windows by notice type. These are fallbacks — always prefer the deadline printed on the notice itself. 'source' indicates whether the clock typically runs from issue or receipt; this is disputed, so we never assert it.",
+  "deadlines": [
+    {
+      "section_old": "139(9)",
+      "section_new": "263(9)",
+      "name": "Defective return",
+      "typical_days": 15,
+      "notes": "15 days from date of intimation to correct the defect"
+    },
+    {
+      "section_old": "142(1)",
+      "section_new": "220",
+      "name": "Inquiry before assessment",
+      "typical_days": 15,
+      "notes": "Typically 15 days; check the notice for the exact date"
+    },
+    {
+      "section_old": "143(1)",
+      "section_new": "221(1)",
+      "name": "Intimation — processing of return",
+      "typical_days": 30,
+      "notes": "30 days to respond if there is a demand or adjustment"
+    },
+    {
+      "section_old": "148",
+      "section_new": "231",
+      "name": "Notice for reassessment",
+      "typical_days": 30,
+      "notes": "Typically 30 days; must file return or respond"
+    },
+    {
+      "section_old": "148A",
+      "section_new": "231A",
+      "name": "Show-cause before reassessment",
+      "typical_days": 30,
+      "notes": "7 to 30 days depending on case; check the notice"
+    },
+    {
+      "section_old": "156",
+      "section_new": "241",
+      "name": "Notice of demand",
+      "typical_days": 30,
+      "notes": "30 days from service of notice to pay demand"
+    },
+    {
+      "section_old": "245",
+      "section_new": "360",
+      "name": "Set off of refunds",
+      "typical_days": 30,
+      "notes": "30 days to respond to proposed set-off"
+    }
+  ]
+}
