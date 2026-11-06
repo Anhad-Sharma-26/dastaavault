@@ -38,6 +38,8 @@ export type ReasoningEffort = "none" | "low" | "medium" | "high";
 
 /** Content part for multi-modal messages. */
 export type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } }
   | { type: "input_text"; text: string }
   | { type: "input_image"; image_url: { url: string } };
 
@@ -124,18 +126,28 @@ function buildBody(
 }
 
 /**
- * Parse the output text from an API response.
+ * Parse the output text from an API response (supports both /responses and /chat/completions).
  */
-function extractText(data: APIResponse): string {
-  if (!data.output || data.output.length === 0) return "";
+function extractText(data: any): string {
+  // 1. OpenAI chat completions format
+  if (data.choices && Array.isArray(data.choices) && data.choices[0]?.message?.content) {
+    return data.choices[0].message.content;
+  }
 
-  for (const block of data.output) {
-    if (block.type === "message" && block.content) {
-      for (const part of block.content) {
-        if (part.type === "output_text") return part.text;
+  // 2. BharatCode /responses format
+  if (data.output && Array.isArray(data.output)) {
+    for (const block of data.output) {
+      if (block.type === "message" && block.content && Array.isArray(block.content)) {
+        for (const part of block.content) {
+          if (part.type === "output_text" && part.text) return part.text;
+          if (part.text) return part.text;
+        }
       }
     }
   }
+
+  // 3. Simple text field
+  if (typeof data.text === "string") return data.text;
 
   return "";
 }
@@ -193,6 +205,19 @@ async function fetchWithRetry(
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
+/** Format an API error with clean human-readable message if JSON. */
+function formatApiError(status: number, rawText: string): string {
+  try {
+    const parsed = JSON.parse(rawText);
+    if (parsed.error?.message) {
+      return `BharatCode API (${status}): ${parsed.error.message}`;
+    }
+  } catch {
+    // fallback to raw
+  }
+  return `BharatCode API error ${status}: ${rawText}`;
+}
+
 /**
  * Non-streaming model call.
  *
@@ -212,9 +237,7 @@ export async function callModel(params: {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(
-      `BharatCode API error ${response.status}: ${errorText}`
-    );
+    throw new Error(formatApiError(response.status, errorText));
   }
 
   const data = (await response.json()) as APIResponse;
@@ -263,9 +286,7 @@ export async function* callModelStreaming(params: {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(
-      `BharatCode API error ${response.status}: ${errorText}`
-    );
+    throw new Error(formatApiError(response.status, errorText));
   }
 
   const reader = response.body?.getReader();
@@ -367,8 +388,8 @@ export async function callModelWithVision(
     {
       role: "user",
       content: [
-        { type: "input_text", text: prompt },
-        { type: "input_image", image_url: { url: dataUrl } },
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: dataUrl } },
       ],
     },
   ];
@@ -405,9 +426,7 @@ export async function callModelWithStructuredOutput(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(
-      `BharatCode API error ${response.status}: ${errorText}`
-    );
+    throw new Error(formatApiError(response.status, errorText));
   }
 
   const data = (await response.json()) as APIResponse;
