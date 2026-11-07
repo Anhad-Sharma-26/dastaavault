@@ -98,18 +98,24 @@ export function FileUpload({ onImageReady, disabled }: FileUploadProps) {
           disabled={disabled || isProcessing}
         />
 
-        {previewUrl ? (
-          <div className="flex flex-col items-center">
-            <div className="relative w-28 h-28 rounded-[var(--radius-input)] overflow-hidden border border-[var(--color-rule)] mb-2 bg-[var(--color-paper-2)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={previewUrl}
-                alt="Document preview"
-                className="w-full h-full object-contain"
-              />
+        {fileName ? (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-2 px-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-[var(--radius-input)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex items-center justify-center font-mono text-xs font-semibold text-[var(--color-ink)] shrink-0">
+                {fileName.toLowerCase().endsWith(".pdf") ? "PDF" : "IMG"}
+              </div>
+              <div className="text-left space-y-0.5 min-w-0">
+                <p className="text-xs font-semibold text-[var(--color-ink)] truncate max-w-xs sm:max-w-md">
+                  {fileName}
+                </p>
+                <p className="text-[11px] text-[var(--color-success)] font-medium">
+                  Document loaded and ready for inspection
+                </p>
+              </div>
             </div>
-            <p className="text-xs font-semibold text-[var(--color-ink)] truncate max-w-xs">{fileName}</p>
-            <p className="text-[11px] text-[var(--color-muted)] mt-0.5">Click or drag another file to replace</p>
+            <span className="text-[11px] font-medium text-[var(--color-muted)] hover:text-[var(--color-ink)] underline underline-offset-2 shrink-0">
+              Click or drop to replace
+            </span>
           </div>
         ) : (
           <div className="flex flex-col items-center">

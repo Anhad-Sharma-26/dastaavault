@@ -241,6 +241,78 @@ export default function Home() {
               disabled={isAnalyzing}
             />
           )}
+
+          {/* Action Row: Language Selector + Analyze Document CTA */}
+          <div className="pt-4 border-t border-[var(--color-rule)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-[var(--color-muted)]">Language:</span>
+              <div className="flex items-center gap-1 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)]">
+                <button
+                  type="button"
+                  disabled={isAnalyzing}
+                  onClick={() => setLanguage("en")}
+                  className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                    language === "en"
+                      ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                      : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                  }`}
+                >
+                  English
+                </button>
+                <button
+                  type="button"
+                  disabled={isAnalyzing}
+                  onClick={() => setLanguage("hi")}
+                  className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                    language === "hi"
+                      ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                      : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                  }`}
+                >
+                  हिंदी
+                </button>
+                <button
+                  type="button"
+                  disabled={isAnalyzing}
+                  onClick={() => setLanguage("hinglish")}
+                  className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                    language === "hinglish"
+                      ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                      : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                  }`}
+                >
+                  Hinglish
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {docName && (
+                <span className="text-xs text-[var(--color-muted)] truncate max-w-xs hidden md:inline">
+                  Ready: <strong className="font-medium text-[var(--color-ink)]">{docName}</strong>
+                </span>
+              )}
+              <button
+                type="button"
+                disabled={(!imageBase64 && !selectedDemoId) || isAnalyzing}
+                onClick={runAnalysis}
+                className={`py-2.5 px-6 rounded-[var(--radius-input)] text-xs font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap shadow-xs focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
+                  (!imageBase64 && !selectedDemoId) || isAnalyzing
+                    ? "bg-[var(--color-paper-3)] text-[var(--color-muted)] cursor-not-allowed"
+                    : "bg-[var(--color-ink)] hover:bg-[var(--color-ink-2)] text-[var(--color-paper)] cursor-pointer"
+                }`}
+              >
+                {isAnalyzing ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-[var(--color-paper)] border-t-transparent rounded-full animate-spin"></span>
+                    <span>Reviewing document…</span>
+                  </>
+                ) : (
+                  <span>Analyze document</span>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Step Indicator Scan Bar (Active during analysis) */}
@@ -258,11 +330,6 @@ export default function Home() {
               selectedDemoId={selectedDemoId}
               uploadedImageBase64={imageBase64}
               uploadedDocName={docName}
-              language={language}
-              onLanguageChange={setLanguage}
-              onAnalyze={runAnalysis}
-              isAnalyzing={isAnalyzing}
-              canAnalyze={Boolean(imageBase64 || selectedDemoId)}
             />
           </div>
 
@@ -350,21 +417,16 @@ export default function Home() {
                 <div className="p-4 rounded-[var(--radius-input)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                   <div className="space-y-0.5">
                     <span className="font-medium text-[var(--color-ink)]">
-                      Ready to review: {docName || "your document"}
+                      Ready to inspect: {docName || "your document"}
                     </span>
                     <p className="text-[11px] text-[var(--color-muted)]">
-                      Click the button to inspect this document.
+                      Click “Analyze document” above to begin automated review.
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={runAnalysis}
-                    disabled={isAnalyzing}
-                    className="px-4 py-2 rounded-[var(--radius-input)] bg-[var(--color-ink)] hover:bg-[var(--color-ink-2)] text-[var(--color-paper)] text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-focus)]"
-                  >
-                    Analyze now
-                  </button>
+                  <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-[var(--color-cotton)] border border-[var(--color-rule)] text-[var(--color-muted)] shrink-0">
+                    Local privacy sandbox
+                  </span>
                 </div>
               </div>
             )}

@@ -73,7 +73,7 @@ export function getFallbackConfig(): {
 
 /** Check if an HTTP status should trigger the fallback provider. */
 function shouldFallback(status: number): boolean {
-  return [401, 402, 429, 500, 502, 503, 504].includes(status);
+  return status !== 200;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -144,6 +144,7 @@ function sleep(ms: number): Promise<void> {
 function buildBody(
   messages: Message[],
   options: CallOptions & {
+    responseFormat?: any;
     textFormat?: {
       type: "json_schema";
       name: string;
@@ -153,18 +154,25 @@ function buildBody(
 ): Record<string, unknown> {
   const body: Record<string, unknown> = {
     model: MODEL,
-    input: messages,
-    store: false,
+    messages: messages,
     stream: options.stream ?? false,
-    max_output_tokens: options.maxOutputTokens ?? options.maxTokens ?? 4096,
+    max_tokens: options.maxOutputTokens ?? options.maxTokens ?? 4096,
   };
 
   if (options.reasoning && options.reasoning !== "none") {
-    body.reasoning = { effort: options.reasoning };
+    body.reasoning_effort = options.reasoning;
   }
 
-  if (options.textFormat) {
-    body.text = { format: options.textFormat };
+  if (options.responseFormat) {
+    body.response_format = options.responseFormat;
+  } else if (options.textFormat) {
+    body.response_format = {
+      type: "json_schema",
+      json_schema: {
+        name: options.textFormat.name,
+        schema: options.textFormat.schema,
+      },
+    };
   }
 
   return body;
@@ -208,6 +216,9 @@ function extractUsage(data: any): TokenUsage {
 function formatApiError(status: number, rawText: string): string {
   try {
     const parsed = JSON.parse(rawText);
+    if (parsed.error?.code === "subscription_required" || parsed.error?.type === "subscription_required") {
+      return "BharatCode API requires an active Lite, Pro, or verified student account for custom uploaded files. To test the full analysis pipeline right now for free, choose any of the 13 sample presets!";
+    }
     if (parsed.error?.message) {
       return `BharatCode API (${status}): ${parsed.error.message}`;
     }
@@ -220,7 +231,7 @@ function formatApiError(status: number, rawText: string): string {
 // ─── Core fetch with retry ───────────────────────────────────────────────────
 
 async function fetchWithRetry(body: Record<string, unknown>): Promise<Response> {
-  const url = `${BASE_URL}/responses`;
+  const url = `${BASE_URL}/chat/completions`;
   const apiKey = getApiKey();
 
   if (!apiKey) {
@@ -508,15 +519,24 @@ export async function* callModelStreaming(params: {
           try {
             const event = JSON.parse(jsonStr);
 
-            if (event.type === "response.output_text.delta" && event.delta) {
-              yield event.delta;
+            const content =
+              event.choices?.[0]?.delta?.content ??
+              (event.type === "response.output_text.delta" ? event.delta : null) ??
+              event.delta;
+
+            if (content) {
+              yield content;
             }
 
-            if (event.type === "response.completed" && event.response?.usage) {
+            const usage =
+              event.usage ??
+              (event.type === "response.completed" ? event.response?.usage : null);
+
+            if (usage) {
               finalUsage = {
-                input_tokens: event.response.usage.input_tokens ?? 0,
-                output_tokens: event.response.usage.output_tokens ?? 0,
-                total_tokens: event.response.usage.total_tokens ?? 0,
+                input_tokens: usage.input_tokens ?? usage.prompt_tokens ?? 0,
+                output_tokens: usage.output_tokens ?? usage.completion_tokens ?? 0,
+                total_tokens: usage.total_tokens ?? 0,
               };
             }
           } catch {
