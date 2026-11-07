@@ -34,6 +34,7 @@ import {
 import { verifyITNotice, verifyRentAgreement } from "@/lib/verification";
 import { getSectionMappingForPrompt } from "@/lib/section-mapping";
 import { addTokens, isAtLimit } from "@/lib/token-tracker";
+import { DEMO_SIMULATIONS, type SimulatedDocResult } from "@/lib/demo-simulator";
 import type { Language, AnalysisRequest } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -126,9 +127,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const { imageBase64, language = "en" } = body;
+  const { imageBase64, language = "en", demoId } = body;
 
-  if (!imageBase64 || typeof imageBase64 !== "string") {
+  if (!demoId && (!imageBase64 || typeof imageBase64 !== "string")) {
     return new Response(
       JSON.stringify({ error: "Missing or invalid `imageBase64` field." }),
       { status: 400, headers: { "Content-Type": "application/json" } },
@@ -154,8 +155,62 @@ export async function POST(request: Request) {
       let totalTokensUsed = 0;
 
       try {
+        // If a synthetic demo document is selected, stream its verified grounded simulation
+        if (body.demoId && DEMO_SIMULATIONS[body.demoId]) {
+          const sim = DEMO_SIMULATIONS[body.demoId];
+          const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+          emitStep("transcribing", 1);
+          await sleep(350);
+          emit("transcription", { text: sim.transcription, confidence: "high" });
+
+          emitStep("classifying", 2);
+          await sleep(300);
+          emit("classification", { doc_type: sim.doc_type, confidence: 0.98 });
+
+          if (sim.doc_type === "unsupported") {
+            emit("error", {
+              message:
+                "This document is not an Indian Income Tax notice or Rent Agreement. DastaaVault currently handles these two document types.",
+            });
+            controller.close();
+            return;
+          }
+
+          emitStep("extracting", 3);
+          await sleep(400);
+          emit("extraction", sim.extracted);
+
+          emitStep("verifying", 4);
+          await sleep(300);
+          const verification =
+            sim.doc_type === "income_tax_notice"
+              ? verifyITNotice(sim.extracted as any)
+              : verifyRentAgreement(sim.extracted as any);
+
+          emit("verification", {
+            flags: verification.flags,
+            severity: verification.severity,
+          });
+
+          emitStep("explaining", 5);
+          await sleep(250);
+          const explanationText =
+            sim.explanation[language as Language] || sim.explanation.en;
+          const words = explanationText.split(" ");
+          for (let i = 0; i < words.length; i += 3) {
+            const chunk = words.slice(i, i + 3).join(" ") + " ";
+            emit("explanation_chunk", { text: chunk });
+            await sleep(25);
+          }
+
+          emit("done", { total_tokens_used: 1200 });
+          controller.close();
+          return;
+        }
+
         // ---------------------------------------------------------------
-        // Step 1 — Transcribe (vision)
+        // Step 1 — Transcribe (live vision model)
         // ---------------------------------------------------------------
         emitStep("transcribing", 1);
 

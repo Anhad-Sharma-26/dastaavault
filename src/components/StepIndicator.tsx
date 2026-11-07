@@ -3,40 +3,39 @@
 import React from "react";
 
 interface StepIndicatorProps {
-  currentStep: number; // 0 (idle) to 5 (explaining)
+  currentStep: number;
   currentStepName?: string;
   isComplete?: boolean;
   error?: string | null;
 }
 
-export function StepIndicator({ currentStep, isComplete, error }: StepIndicatorProps) {
+export function StepIndicator({
+  currentStep,
+  isComplete,
+  error,
+}: StepIndicatorProps) {
   const steps = [
-    { num: 1, label: "Transcribing", icon: "📄", desc: "Vision OCR" },
-    { num: 2, label: "Classifying", icon: "🤖", desc: "Tax vs Rent" },
-    { num: 3, label: "Extracting", icon: "🔍", desc: "JSON Schema" },
-    { num: 4, label: "Verifying", icon: "⚖️", desc: "Law & Risks" },
-    { num: 5, label: "Explaining", icon: "💬", desc: "Plain language" },
+    { num: 1, label: "Transcribing", desc: "Vision OCR" },
+    { num: 2, label: "Classifying", desc: "Notice vs lease" },
+    { num: 3, label: "Extracting", desc: "Structured fields" },
+    { num: 4, label: "Checking", desc: "Section mappings" },
+    { num: 5, label: "Explaining", desc: "Plain language" },
   ];
 
   if (currentStep === 0 && !error) return null;
 
   return (
-    <div className="p-4 rounded-xl bg-gray-900/60 border border-gray-800 backdrop-blur">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
-          {error ? (
-            <span className="text-red-400">Analysis Halted</span>
-          ) : isComplete ? (
-            <span className="text-emerald-400">Analysis Complete</span>
-          ) : (
-            <span className="text-indigo-400 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
-              Pipeline Running...
-            </span>
-          )}
+    <div className="p-4 rounded-[var(--radius-card)] bg-[var(--color-cotton)] border border-[var(--color-rule)]">
+      <div className="flex items-center justify-between mb-3 text-xs">
+        <span className="font-semibold text-[var(--color-ink)]">
+          {error
+            ? "Analysis halted"
+            : isComplete
+            ? "Analysis complete"
+            : `Processing step ${currentStep} of 5`}
         </span>
-        <span className="text-xs text-gray-500 font-mono">
-          {isComplete ? "5 / 5 done" : `Step ${currentStep} of 5`}
+        <span className="text-[var(--color-muted)] font-mono">
+          {isComplete ? "5 of 5 done" : `step ${currentStep}/5`}
         </span>
       </div>
 
@@ -44,40 +43,34 @@ export function StepIndicator({ currentStep, isComplete, error }: StepIndicatorP
         {steps.map((step) => {
           const isDone = isComplete || currentStep > step.num;
           const isCurrent = !isComplete && currentStep === step.num;
-          const isPending = currentStep < step.num;
 
           return (
             <div
               key={step.num}
-              className={`p-2.5 rounded-lg border text-xs transition-all ${
+              className={`p-2.5 rounded-[var(--radius-input)] border text-xs ${
                 isDone
-                  ? "bg-emerald-950/30 border-emerald-500/30 text-emerald-300"
+                  ? "bg-[var(--color-paper-2)] border-[var(--color-rule-2)] text-[var(--color-ink)]"
                   : isCurrent
-                  ? "bg-indigo-950/50 border-indigo-500 shadow-sm shadow-indigo-500/20 text-white animate-pulse"
-                  : "bg-gray-950/40 border-gray-800 text-gray-500 opacity-60"
+                  ? "bg-[var(--color-paper-3)] border-[var(--color-ink)] text-[var(--color-ink)] font-semibold"
+                  : "bg-[var(--color-paper)] border-[var(--color-rule)] text-[var(--color-muted)] opacity-60"
               }`}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm">{step.icon}</span>
-                {isDone ? (
-                  <span className="text-emerald-400 text-xs">✓</span>
-                ) : isCurrent ? (
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping"></span>
-                ) : (
-                  <span className="text-[10px] text-gray-600">#{step.num}</span>
-                )}
+                <span className="text-[11px] font-mono">0{step.num}</span>
+                {isDone && <span className="text-[var(--color-success)] text-xs">✓</span>}
               </div>
-              <div className="font-semibold truncate">{step.label}</div>
-              <div className="text-[10px] opacity-75 truncate">{step.desc}</div>
+              <div className="truncate">{step.label}</div>
+              <div className="text-[11px] text-[var(--color-muted)] truncate">
+                {step.desc}
+              </div>
             </div>
           );
         })}
       </div>
 
       {error && (
-        <div className="mt-3 p-3 rounded-lg bg-red-950/50 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
-          <span>⚠️</span>
-          <span>{error}</span>
+        <div className="mt-3 p-3 rounded-[var(--radius-input)] bg-[color-mix(in_oklab,var(--color-error)_8%,var(--color-paper))] border border-[var(--color-error)] text-[var(--color-error)] text-xs">
+          {error}
         </div>
       )}
     </div>

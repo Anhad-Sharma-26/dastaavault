@@ -3,13 +3,13 @@ import React from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DastaaVault — Your Document, Decoded",
+  title: "DastaaVault — Indian Document Reviewer",
   description:
-    "Upload a photo or PDF of an Indian income tax notice or rent agreement. Get structured extraction, risk flags, deadline countdowns, and action steps in English, Hindi, or Hinglish. Nothing stored. PII masked. Not legal advice.",
+    "Review Indian Income Tax notices and rent agreements. Structured field extraction, 1961 vs 2025 Act section mapping, deadline tracking, and risk analysis in English, Hindi, and Hinglish.",
   openGraph: {
-    title: "DastaaVault — Your Document, Decoded",
+    title: "DastaaVault — Indian Document Reviewer",
     description:
-      "AI-powered analysis of Indian income tax notices and rent agreements. Free, private, open-source.",
+      "Privacy-first statutory analysis of Indian income tax notices and rent agreements.",
     type: "website",
   },
 };
@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-gray-950 text-gray-100 font-sans">
+    <html lang="en" className="h-full">
+      <body className="min-h-full flex flex-col bg-[var(--color-paper)] text-[var(--color-ink)] font-sans">
         {children}
       </body>
     </html>

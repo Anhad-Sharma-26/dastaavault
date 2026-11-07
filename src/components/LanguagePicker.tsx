@@ -9,22 +9,23 @@ interface LanguagePickerProps {
   disabled?: boolean;
 }
 
-export function LanguagePicker({ selected, onChange, disabled }: LanguagePickerProps) {
-  const languages: Array<{ id: Language; label: string; desc: string }> = [
-    { id: "en", label: "English", desc: "Clear & simple" },
-    { id: "hinglish", label: "Hinglish", desc: "Hindi + English mix" },
-    { id: "hi", label: "हिंदी", desc: "सरल व स्पष्ट भाषा" },
+export function LanguagePicker({
+  selected,
+  onChange,
+  disabled,
+}: LanguagePickerProps) {
+  const languages: Array<{ id: Language; label: string }> = [
+    { id: "en", label: "English" },
+    { id: "hinglish", label: "Hinglish" },
+    { id: "hi", label: "हिंदी" },
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-gray-900/50 rounded-xl border border-gray-800">
-      <span className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
-        <svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-        </svg>
-        Explanation Language:
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[var(--color-paper-2)] rounded-[var(--radius-card)] border border-[var(--color-rule)]">
+      <span className="text-xs text-[var(--color-ink-2)]">
+        Explanation language
       </span>
-      <div className="inline-flex rounded-lg bg-gray-950 p-1 border border-gray-800">
+      <div className="inline-flex rounded-[var(--radius-input)] bg-[var(--color-paper-3)] p-0.5 border border-[var(--color-rule)]">
         {languages.map((lang) => {
           const isActive = selected === lang.id;
           return (
@@ -33,13 +34,13 @@ export function LanguagePicker({ selected, onChange, disabled }: LanguagePickerP
               type="button"
               disabled={disabled}
               onClick={() => onChange(lang.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`px-3 py-1 text-xs rounded-[calc(var(--radius-input)-2px)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
                 isActive
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] font-semibold shadow-xs"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
               } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
             >
-              <span>{lang.label}</span>
+              {lang.label}
             </button>
           );
         })}

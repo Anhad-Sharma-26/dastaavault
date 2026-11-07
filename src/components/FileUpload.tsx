@@ -32,7 +32,7 @@ export function FileUpload({ onImageReady, disabled }: FileUploadProps) {
       } else if (file.type.startsWith("image/")) {
         base64Result = await resizeImage(file, 1600);
       } else {
-        throw new Error("Please upload a PDF or an image file (JPG, PNG, WebP).");
+        throw new Error("Upload a PDF or an image file (JPG, PNG, WebP).");
       }
 
       setPreviewUrl(base64Result);
@@ -65,6 +65,14 @@ export function FileUpload({ onImageReady, disabled }: FileUploadProps) {
   return (
     <div className="space-y-3">
       <div
+        tabIndex={0}
+        role="button"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         onDragOver={(e) => {
           e.preventDefault();
           if (!disabled) setIsDragging(true);
@@ -74,10 +82,10 @@ export function FileUpload({ onImageReady, disabled }: FileUploadProps) {
         onClick={() => {
           if (!disabled && !isProcessing) inputRef.current?.click();
         }}
-        className={`relative border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer ${
+        className={`relative border-2 border-dashed rounded-[var(--radius-card)] p-6 text-center cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
           isDragging
-            ? "border-indigo-400 bg-indigo-950/40 scale-[1.01]"
-            : "border-gray-800 bg-gray-900/40 hover:border-gray-700 hover:bg-gray-900/60"
+            ? "border-[var(--color-accent-2)] bg-[var(--color-paper-2)]"
+            : "border-[var(--color-rule-2)] bg-[var(--color-cotton)] hover:bg-[var(--color-paper-2)]"
         } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <input
@@ -91,43 +99,40 @@ export function FileUpload({ onImageReady, disabled }: FileUploadProps) {
 
         {previewUrl ? (
           <div className="flex flex-col items-center">
-            <div className="relative w-36 h-36 rounded-xl overflow-hidden border border-gray-700 shadow-md mb-3 bg-black">
+            <div className="relative w-32 h-32 rounded-[var(--radius-input)] overflow-hidden border border-[var(--color-rule)] mb-3 bg-[var(--color-paper-2)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewUrl}
-                alt="Uploaded document preview"
+                alt="Document preview"
                 className="w-full h-full object-contain"
               />
             </div>
-            <p className="text-xs font-semibold text-gray-200 truncate max-w-xs">{fileName}</p>
-            <p className="text-[11px] text-indigo-400 mt-1 hover:underline">Click or drop another file to change</p>
+            <p className="text-xs font-semibold text-[var(--color-ink)] truncate max-w-xs">{fileName}</p>
+            <p className="text-xs text-[var(--color-muted)] mt-1">Click or drag another file to replace</p>
           </div>
         ) : (
           <div className="flex flex-col items-center">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-2xl text-indigo-400 mb-3">
-              {isProcessing ? "⏳" : "📥"}
+            <div className="w-10 h-10 rounded-[var(--radius-input)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-ink-2)] mb-2 font-mono text-xs">
+              DOC
             </div>
-            <p className="font-semibold text-sm text-gray-200">
-              {isProcessing ? "Processing & Optimizing Image..." : "Drop your document here, or browse"}
+            <p className="font-semibold text-sm text-[var(--color-ink)]">
+              {isProcessing ? "Optimizing document..." : "Upload notice or agreement"}
             </p>
-            <p className="text-xs text-gray-400 mt-1">
-              Supports Tax Notice or Rent Agreement (PDF, JPG, PNG up to 15MB)
+            <p className="text-xs text-[var(--color-muted)] mt-1">
+              Drop photo or PDF (single page, up to 15MB)
             </p>
-            <div className="flex items-center gap-3 mt-4 text-[11px] text-gray-500">
-              <span className="flex items-center gap-1">🔒 Client-side resize</span>
-              <span>•</span>
-              <span className="flex items-center gap-1">⚡ Instant OCR</span>
-              <span>•</span>
-              <span className="flex items-center gap-1">🛡️ PII masked</span>
+            <div className="flex items-center gap-2 mt-3 text-[11px] text-[var(--color-muted)]">
+              <span>Client-side resize</span>
+              <span>·</span>
+              <span>No cloud storage</span>
             </div>
           </div>
         )}
       </div>
 
       {errorMessage && (
-        <div className="p-3 rounded-lg bg-red-950/60 border border-red-500/40 text-red-300 text-xs flex items-center gap-2">
-          <span>⚠️</span>
-          <span>{errorMessage}</span>
+        <div className="p-3 rounded-[var(--radius-input)] bg-[color-mix(in_oklab,var(--color-error)_8%,var(--color-paper))] border border-[var(--color-error)] text-[var(--color-error)] text-xs">
+          {errorMessage}
         </div>
       )}
     </div>

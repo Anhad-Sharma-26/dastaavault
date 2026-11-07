@@ -20,15 +20,15 @@ export function ExplanationStream({ text, isStreaming }: ExplanationStreamProps)
   if (!text && !isStreaming) return null;
 
   return (
-    <div className="bg-gray-900/70 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+    <div className="bg-[var(--color-cotton)] border border-[var(--color-rule)] rounded-[var(--radius-card)] p-5 space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-[var(--color-rule)]">
         <div className="flex items-center gap-2">
-          <span className="text-xl">💬</span>
-          <h3 className="text-base font-bold text-white">Plain-Language Breakdown</h3>
+          <h3 className="text-base font-semibold text-[var(--color-ink)]">
+            Document explanation
+          </h3>
           {isStreaming && (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] uppercase font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping"></span>
-              Streaming
+            <span className="text-[11px] font-mono text-[var(--color-accent-2)]">
+              Streaming…
             </span>
           )}
         </div>
@@ -37,28 +37,17 @@ export function ExplanationStream({ text, isStreaming }: ExplanationStreamProps)
           <button
             type="button"
             onClick={handleCopy}
-            className="text-xs px-2.5 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors cursor-pointer flex items-center gap-1.5"
+            className="text-xs px-2.5 py-1 rounded-[var(--radius-input)] bg-[var(--color-paper-2)] hover:bg-[var(--color-paper-3)] text-[var(--color-ink-2)] transition-colors cursor-pointer border border-[var(--color-rule)] focus-visible:outline-2 focus-visible:outline-[var(--color-focus)]"
           >
-            {copied ? (
-              <>
-                <span className="text-emerald-400">✓</span> Copied!
-              </>
-            ) : (
-              <>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy
-              </>
-            )}
+            {copied ? "Copied" : "Copy text"}
           </button>
         )}
       </div>
 
-      <div className="prose prose-invert prose-sm max-w-none text-gray-200 text-sm leading-relaxed whitespace-pre-wrap font-sans">
+      <div className="prose prose-sm max-w-none text-[var(--color-ink)] text-sm leading-relaxed whitespace-pre-wrap font-sans">
         {text}
         {isStreaming && (
-          <span className="inline-block w-2 h-4 bg-indigo-500 animate-pulse ml-1 align-middle"></span>
+          <span className="inline-block w-1.5 h-3.5 bg-[var(--color-accent-2)] ml-0.5 align-middle"></span>
         )}
       </div>
     </div>
