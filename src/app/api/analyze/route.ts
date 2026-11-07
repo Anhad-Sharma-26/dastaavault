@@ -152,6 +152,13 @@ export async function POST(request: Request) {
 
   const { imageBase64, language = "en", demoId } = body;
 
+  if (demoId && !DEMO_SIMULATIONS[demoId]) {
+    return new Response(
+      JSON.stringify({ error: `Unknown demo document ID "${demoId}".` }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   if (!demoId && (!imageBase64 || typeof imageBase64 !== "string")) {
     return new Response(
       JSON.stringify({ error: "Missing or invalid `imageBase64` field." }),

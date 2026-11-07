@@ -570,6 +570,10 @@ export async function callModelWithVision(
   prompt: string,
   options?: CallOptions
 ): Promise<ModelResult> {
+  if (!imageBase64 || typeof imageBase64 !== "string") {
+    throw new Error("Missing or invalid imageBase64 payload for vision model call.");
+  }
+
   const mime = imageBase64.startsWith("/9j/")
     ? "image/jpeg"
     : imageBase64.startsWith("iVBOR")
