@@ -51,7 +51,7 @@ export function StepIndicator({
 
           if (isFailed) {
             cardStyle = "bg-[color-mix(in_oklab,var(--color-error)_10%,var(--color-paper))] border-[var(--color-error)] text-[var(--color-error)]";
-            badgeText = "Error";
+            badgeText = error?.toLowerCase().includes("unsupported") ? "Unsupported" : "Error";
           } else if (isDone) {
             cardStyle = "bg-[var(--color-paper-3)] border-[var(--color-rule-2)] text-[var(--color-ink)]";
             badgeText = "Done";

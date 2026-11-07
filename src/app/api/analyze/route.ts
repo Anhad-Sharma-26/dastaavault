@@ -205,20 +205,23 @@ export async function POST(request: Request) {
           await sleep(350);
           emit("transcription", { text: sim.transcription, confidence: "high" });
 
-          emitStep("classifying", 2);
+          emitStep("masking", 2);
+          await sleep(200);
+
+          emitStep("classifying", 3);
           await sleep(300);
           emit("classification", { doc_type: sim.doc_type, confidence: 0.98 });
 
           if (sim.doc_type === "unsupported") {
             emit("error", {
               message:
-                "This document is not an Indian Income Tax notice or Rent Agreement. DastaaVault currently handles these two document types.",
+                "Document identified as an electricity bill. DastaaVault currently specializes in Indian Income Tax Notices and Rent Agreements.",
             });
             safeClose();
             return;
           }
 
-          emitStep("extracting", 3);
+          emitStep("extracting", 4);
           await sleep(400);
           emit("extraction", sim.extracted);
 
@@ -271,12 +274,13 @@ export async function POST(request: Request) {
         // ---------------------------------------------------------------
         // Step 2 — Mask PII (local, no model call)
         // ---------------------------------------------------------------
+        emitStep("masking", 2);
         const maskedText = maskAll(transcription.text);
 
         // ---------------------------------------------------------------
         // Step 3 — Classify document type
         // ---------------------------------------------------------------
-        emitStep("classifying", 2);
+        emitStep("classifying", 3);
 
         const classification = await callModelWithStructuredOutput(
           getClassificationPrompt(maskedText),
@@ -288,17 +292,20 @@ export async function POST(request: Request) {
 
         const docType: string = classification.parsed?.doc_type ?? "unknown";
         const classConfidence: number = classification.parsed?.confidence ?? 0;
+        const reason: string = classification.parsed?.reason?.trim() ?? "";
 
         emit("classification", {
           doc_type: docType,
           confidence: classConfidence,
+          reason,
         });
 
         // Bail out if the document type is not supported.
         if (docType === "unsupported" || docType === "unknown") {
+          const detail = reason ? ` (${reason})` : "";
           emit("error", {
             message:
-              "This document type is not supported yet. DastaaVault currently handles Indian income-tax notices and rent agreements.",
+              `Document identified as unsupported${detail}. DastaaVault currently specializes in Indian Income Tax Notices/Intimations (e.g. u/s 143(1), 142(1), 148, 156 with demand/refund determination) and Rent Agreements. Please upload an Income Tax notice or rent deed, or choose from our 13 test presets above.`,
           });
           safeClose();
           return;
@@ -307,7 +314,7 @@ export async function POST(request: Request) {
         // ---------------------------------------------------------------
         // Step 4 — Extract structured fields
         // ---------------------------------------------------------------
-        emitStep("extracting", 3);
+        emitStep("extracting", 4);
 
         const sectionContext = JSON.stringify(getSectionMappingForPrompt());
 

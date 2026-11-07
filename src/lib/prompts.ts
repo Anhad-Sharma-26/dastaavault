@@ -34,17 +34,16 @@ Output the transcribed text and nothing else.`;
  * @param text - The transcribed (and PII-masked) document text.
  */
 export function getClassificationPrompt(text: string): string {
-  return `You are a document classifier. Given the transcribed text of an Indian document, classify it into exactly one of the following categories:
+  return `You are a document classifier for Indian documents. Given the transcribed text of a document, classify it into exactly one of the following categories:
 
-1. "income_tax_notice" — Any notice, intimation, order, or communication from the Income Tax Department of India (e.g., sections 139, 142, 143, 144, 147, 148, 154, 156, 245, 246A, 271, 276C, or their 2025-Act equivalents).
-2. "rent_agreement" — A residential or commercial rent / lease agreement between a landlord and tenant.
-3. "unsupported" — Any other document type.
+1. "income_tax_notice" — Any notice, intimation, demand notice, penalty order, or assessment communication issued by the Income Tax Department of India (e.g., sections 139(9), 142(1), 143(1), 144, 147, 148, 154, 156, 221, 231, 245, 271, 276C, or their 2025-Act equivalents). Note: blank statutory application templates or routine stock broker statements (such as Form 1 or Form 7) are not notices issued to a taxpayer with a tax demand.
+2. "rent_agreement" — A residential or commercial rent / lease deed or agreement between a landlord and tenant.
+3. "unsupported" — Any other document type (e.g., blank procedural forms, invoices, utility bills, identity cards, corporate reports).
 
 Rules:
 - Be confident. Only classify as "income_tax_notice" or "rent_agreement" if you are reasonably sure.
-- Default to "unsupported" if uncertain.
+- If classifying as "unsupported", specify what document it appears to be in the "reason" field (e.g., "Statutory filing form: Form No. 7 application for scientific research", "Form No. 1 stock exchange statement", "Electricity utility bill").
 - Provide a confidence score between 0 and 1.
-- Give a brief reason for your classification.
 
 Transcribed text:
 ---
