@@ -102,12 +102,12 @@ flowchart TD
 
 ### 2. Setup
 ```bash
-git clone https://github.com/your-username/dastaavault.git
+git clone https://github.com/Anhad-Sharma-26/dastaavault.git
 cd dastaavault
 pnpm install
 ```
 
-### 3. Environment Variables
+### 3. Environment Variables & BharatCode API Quota
 Create a `.env.local` file in the root:
 ```env
 BHARATCODE_API_KEY=your_bharatcode_api_key_here
@@ -116,13 +116,30 @@ BHARATCODE_MODEL=qwen-3.8-27b
 DAILY_TOKEN_LIMIT=10000000
 ```
 
-### 4. Run Unit Tests
+> **BharatCode Account & Token Notes:**
+> - **Student Access:** Students with a verified college email receive **10,000,000 tokens per day** free at [bharatcode.ai/account](https://bharatcode.ai/account).
+> - **Coding/API Plans:** Active API access requires BharatCode Lite (₹399/mo, Qwen 3.8 27B) or Pro (adds DeepSeek v4.1 Flash).
+> - **Zero-Barrier Evaluation for Judges:** Even without an active API key or quota, all 13 demo documents run with deterministic grounded simulations so anyone can evaluate the full SSE streaming UX and verification checks instantly.
+
+### 4. Hallmark Design System & Linters
+DastaaVault uses a bespoke Hallmark Coral theme (`tokens.css`, `base.css`):
+- Warm letterpress paper palette with ink contrast hierarchy.
+- Tabular numerals for dates, monetary values, and section numbers.
+- Zero AI slop, no emoji icons, no unconstrained purple gradients.
+- Automated linting with `sloplint`:
+  ```bash
+  node ../.agents/skills/hallmark/scripts/sloplint.mjs src
+  # Output: clean. 0 FAIL, 0 REFLEX, 0 WARN
+  ```
+
+### 5. Run Unit Tests
 ```bash
 pnpm test
+# Or: node --test tests/test-suite.mjs
 ```
-All 15 automated test suites run in ~90ms.
+All 15 automated test suites run deterministically in ~100ms.
 
-### 5. Start Development Server
+### 6. Start Development Server
 ```bash
 pnpm dev
 ```
