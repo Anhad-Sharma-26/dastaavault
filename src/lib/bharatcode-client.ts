@@ -39,7 +39,8 @@ export function getFallbackConfig(): {
     process.env.FALLBACK_API_KEY ||
     process.env.OPENAI_API_KEY ||
     process.env.GROQ_API_KEY ||
-    process.env.OPENROUTER_API_KEY;
+    process.env.OPENROUTER_API_KEY ||
+    process.env.GEMINI_API_KEY;
 
   if (!apiKey) return null;
 
@@ -56,6 +57,10 @@ export function getFallbackConfig(): {
       baseUrl = "https://openrouter.ai/api/v1";
       model = model || "qwen/qwen-2.5-72b-instruct";
       provider = "OpenRouter";
+    } else if (process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY && !process.env.FALLBACK_API_KEY) {
+      baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai";
+      model = model || "gemini-3.5-flash-lite";
+      provider = "Google Gemini";
     } else {
       baseUrl = "https://api.openai.com/v1";
       model = model || "gpt-4o-mini";
