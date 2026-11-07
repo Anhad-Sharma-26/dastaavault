@@ -25,3 +25,22 @@ button, input, select, textarea { font: inherit; }
 @media (prefers-reduced-motion: reduce) { *:not(.keep-motion), *:not(.keep-motion)::before, *:not(.keep-motion)::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
 /* photographs: muted sepia=8 */
 [data-slot] > img { filter: saturate(0.65) contrast(0.97) sepia(0.08); }
+
+/* Bespoke physical paper and stationery surfaces for Coral theme */
+.stationery-sheet {
+  background: var(--color-cotton);
+  border: 1px solid var(--color-rule);
+  box-shadow: var(--edge-stock), var(--cast-stock);
+  border-radius: var(--radius-card);
+}
+
+.letterpress-card {
+  background: var(--color-paper-2);
+  border: 1px solid var(--color-rule-2);
+  box-shadow: var(--press-groove);
+  border-radius: var(--radius-input);
+}
+
+.desk-surface {
+  background: radial-gradient(circle at 15% 15%, var(--color-desk-highlight) 0%, var(--color-paper) 85%);
+}

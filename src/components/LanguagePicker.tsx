@@ -14,33 +14,33 @@ export function LanguagePicker({
   onChange,
   disabled,
 }: LanguagePickerProps) {
-  const languages: Array<{ id: Language; label: string }> = [
-    { id: "en", label: "English" },
-    { id: "hinglish", label: "Hinglish" },
-    { id: "hi", label: "हिंदी" },
+  const options: { value: Language; label: string; sub: string }[] = [
+    { value: "en", label: "English", sub: "Standard legal terminology" },
+    { value: "hi", label: "हिंदी", sub: "सरल हिंदी सारांश" },
+    { value: "hinglish", label: "Hinglish", sub: "Conversational everyday mix" },
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[var(--color-paper-2)] rounded-[var(--radius-card)] border border-[var(--color-rule)]">
-      <span className="text-xs text-[var(--color-ink-2)]">
-        Explanation language
-      </span>
-      <div className="inline-flex rounded-[var(--radius-input)] bg-[var(--color-paper-3)] p-0.5 border border-[var(--color-rule)]">
-        {languages.map((lang) => {
-          const isActive = selected === lang.id;
+    <div className="space-y-1.5">
+      <label className="block text-xs font-medium text-[var(--color-ink)]">
+        Output language
+      </label>
+      <div className="grid grid-cols-3 gap-1.5 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)]">
+        {options.map((opt) => {
+          const isSelected = selected === opt.value;
           return (
             <button
-              key={lang.id}
+              key={opt.value}
               type="button"
               disabled={disabled}
-              onClick={() => onChange(lang.id)}
-              className={`px-3 py-1 text-xs rounded-[calc(var(--radius-input)-2px)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
-                isActive
-                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] font-semibold shadow-xs"
+              onClick={() => onChange(opt.value)}
+              className={`py-1.5 px-2 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors text-center whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
+                isSelected
+                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
                   : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
               } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
             >
-              {lang.label}
+              <span>{opt.label}</span>
             </button>
           );
         })}

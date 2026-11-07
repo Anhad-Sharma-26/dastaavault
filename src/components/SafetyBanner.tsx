@@ -11,40 +11,50 @@ export function SafetyBanner({
   criticalSeverity,
   highStakesFlags = [],
 }: SafetyBannerProps) {
-  return (
-    <div className="space-y-3">
-      {criticalSeverity && (
-        <div className="p-4 rounded-[var(--radius-card)] border border-[var(--color-error)] bg-[color-mix(in_oklab,var(--color-error)_8%,var(--color-paper))] text-[var(--color-ink)]">
-          <h4 className="font-semibold text-sm text-[var(--color-error)]">
-            High-stakes legal or demand notice
-          </h4>
-          <p className="text-xs text-[var(--color-ink-2)] mt-1">
-            This notice specifies high financial demands or mentions prosecution
-            proceedings. Consult a practicing Chartered Accountant or tax advocate.
-          </p>
-          {highStakesFlags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {highStakesFlags.map((flag, idx) => (
-                <span
-                  key={idx}
-                  className="text-xs px-2 py-0.5 rounded-[var(--radius-input)] bg-[var(--color-paper)] border border-[var(--color-rule)] text-[var(--color-ink-2)]"
-                >
-                  {flag}
-                </span>
-              ))}
+  if (criticalSeverity || highStakesFlags.length > 0) {
+    return (
+      <div className="rounded-[var(--radius-input)] bg-[color-mix(in_oklab,var(--color-error)_10%,var(--color-paper))] border border-[var(--color-error)] p-4 text-[var(--color-error)]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-[color-mix(in_oklab,var(--color-error)_20%,var(--color-paper))] border border-[var(--color-error)]">
+                HIGH STAKES
+              </span>
+              <p className="font-semibold text-sm">
+                Formal legal or tax advisor consultation required
+              </p>
             </div>
-          )}
-        </div>
-      )}
+            <p className="text-xs text-[color-mix(in_oklab,var(--color-error)_80%,black)] leading-relaxed">
+              This document contains significant liability (demand exceeding ₹1,00,000, prosecution clauses, or aggressive forfeiture). DastaaVault provides automated informational guidance only: do not treat this as legal or tax counsel.
+            </p>
+          </div>
 
-      <div className="p-3.5 rounded-[var(--radius-card)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-xs text-[var(--color-muted)] flex flex-wrap items-center justify-between gap-2">
-        <span>
-          Personal details (PAN, Aadhaar, contact details) are redacted client-side before processing. Nothing is stored on any server.
+          <a
+            href="https://eportal.incometax.gov.in"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs px-3 py-1.5 rounded-[var(--radius-input)] bg-[var(--color-error)] text-[var(--color-paper)] font-medium shrink-0 hover:opacity-90 transition-opacity whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)]"
+          >
+            e-Filing portal
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[var(--radius-input)] bg-[var(--color-cotton)] border border-[var(--color-rule)] p-3 text-xs text-[var(--color-muted)] flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[11px] text-[var(--color-ink-2)] bg-[var(--color-paper-2)] px-2 py-0.5 rounded border border-[var(--color-rule)]">
+          PRIVACY SANDBOX
         </span>
-        <span className="text-[var(--color-ink-2)]">
-          DPDP privacy principles
+        <span>
+          PAN, Aadhaar, and phone numbers are masked locally before inference. No documents are logged or retained.
         </span>
       </div>
+      <span className="font-mono text-[11px] text-[var(--color-muted)]">
+        Rate limit: 15 req / 5 min
+      </span>
     </div>
   );
 }

@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import { Header } from "@/components/Header";
 import { SafetyBanner } from "@/components/SafetyBanner";
-import { LanguagePicker } from "@/components/LanguagePicker";
 import { StepIndicator } from "@/components/StepIndicator";
 import { DemoDocPicker, type DemoDocItem } from "@/components/DemoDocPicker";
 import { FileUpload } from "@/components/FileUpload";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import { ResultCard } from "@/components/ResultCard";
 import { ExplanationStream } from "@/components/ExplanationStream";
 import { ActionChecklist } from "@/components/ActionChecklist";
@@ -14,25 +14,26 @@ import { htmlUrlToImageBase64 } from "@/lib/html-to-image";
 import type { Language, Flag, Severity } from "@/lib/types";
 
 export default function Home() {
+  const [sourceMode, setSourceMode] = useState<"preset" | "upload">("preset");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [docName, setDocName] = useState<string | null>(null);
-  const [selectedDemoId, setSelectedDemoId] = useState<string | null>(null);
+  const [docName, setDocName] = useState<string | null>("Intimation u/s 143(1) (Clean)");
+  const [selectedDemoId, setSelectedDemoId] = useState<string | null>("it-143-1");
   const [language, setLanguage] = useState<Language>("en");
 
-  // Pipeline state
+  // Pipeline execution state
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Extracted results
+  // Extracted data state
   const [docType, setDocType] = useState<string | null>(null);
   const [extractedData, setExtractedData] = useState<Record<string, any> | null>(null);
   const [flags, setFlags] = useState<Flag[]>([]);
   const [severity, setSeverity] = useState<Severity>("low");
   const [explanationText, setExplanationText] = useState<string>("");
 
-  const resetState = () => {
+  const resetAnalysisState = () => {
     setCurrentStep(0);
     setIsComplete(false);
     setError(null);
@@ -47,28 +48,27 @@ export default function Home() {
     setImageBase64(base64);
     setDocName(name);
     setSelectedDemoId(null);
-    resetState();
+    resetAnalysisState();
   };
 
   const handleSelectDemo = async (demo: DemoDocItem) => {
     setSelectedDemoId(demo.id);
     setDocName(demo.name);
-    resetState();
+    resetAnalysisState();
 
     try {
       const base64 = await htmlUrlToImageBase64(`/demo-docs/${demo.fileName}`);
       setImageBase64(base64);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load sample document.";
-      setError(msg);
+    } catch {
+      // Demo simulations work without client canvas image
     }
   };
 
   const runAnalysis = async () => {
-    if (!imageBase64 || isAnalyzing) return;
+    if ((!imageBase64 && !selectedDemoId) || isAnalyzing) return;
 
     setIsAnalyzing(true);
-    resetState();
+    resetAnalysisState();
     setCurrentStep(1);
 
     try {
@@ -76,7 +76,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageBase64,
+          imageBase64: imageBase64 || "data:image/png;base64,demo",
           language,
           demoId: selectedDemoId || undefined,
         }),
@@ -84,14 +84,14 @@ export default function Home() {
 
       if (!response.ok) {
         if (response.status === 429) {
-          throw new Error("Rate limit exceeded (15 requests per 5 minutes). Please wait a moment.");
+          throw new Error("Rate limit exceeded: maximum 15 requests per 5 minutes. Please wait a moment.");
         }
         const errJson = await response.json().catch(() => ({}));
         throw new Error(errJson.error || `Server error: ${response.status}`);
       }
 
       const reader = response.body?.getReader();
-      if (!reader) throw new Error("No readable response stream.");
+      if (!reader) throw new Error("No readable response stream available.");
 
       const decoder = new TextDecoder();
       let buffer = "";
@@ -151,7 +151,7 @@ export default function Home() {
                 break;
             }
           } catch {
-            // ignore
+            // ignore malformed SSE frames
           }
         }
       }
@@ -167,98 +167,123 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--color-paper)] text-[var(--color-ink)] flex flex-col font-sans">
       <Header />
 
-      <main className="flex-1 max-w-[1280px] w-full mx-auto px-6 sm:px-12 py-8 space-y-8">
-        {/* Hallmark Hero Section: Headline <= 7 words, Sentence <= 12 words, Action */}
-        <section className="space-y-3 pt-2">
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--color-ink)]">
-            Decode legal notices and agreements.
-          </h1>
-          <p className="text-sm sm:text-base text-[var(--color-muted)] max-w-2xl leading-relaxed">
-            Structured facts, risk checks, and deadlines explained in clear language.
-          </p>
-        </section>
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-6 sm:px-10 py-8 space-y-6">
+        {/* Editorial Hero Bar */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--color-ink)]">
+              Decode Indian legal notices and rent agreements.
+            </h1>
+            <p className="text-xs sm:text-sm text-[var(--color-muted)] max-w-2xl leading-relaxed">
+              Deterministic section cross-mapping, deadline countdowns in IST, and clause risk checks in plain English, Hindi, and Hinglish.
+            </p>
+          </div>
 
-        {/* Safety & Redaction Banner */}
+          <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--color-muted)] shrink-0">
+            <span>13 test presets</span>
+            <span>:</span>
+            <span>ICAI 1961 ↔ 2025 Act</span>
+            <span>:</span>
+            <span>qwen-3.8-27b</span>
+          </div>
+        </div>
+
+        {/* Safety & Compliance Bar */}
         <SafetyBanner
           criticalSeverity={severity === "critical"}
           highStakesFlags={extractedData?.high_stakes_flags}
         />
 
-        {/* Workspace: Upload + Sample Picker */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-5 space-y-4">
-            <div className="bg-[var(--color-cotton)] border border-[var(--color-rule)] rounded-[var(--radius-card)] p-5 space-y-4">
-              <h2 className="text-sm font-semibold text-[var(--color-ink)]">
-                Document input
-              </h2>
-              <FileUpload onImageReady={handleCustomUpload} disabled={isAnalyzing} />
-
-              <div className="pt-2 border-t border-[var(--color-rule)] space-y-3">
-                <LanguagePicker
-                  selected={language}
-                  onChange={setLanguage}
-                  disabled={isAnalyzing}
-                />
-
-                <button
-                  type="button"
-                  disabled={!imageBase64 || isAnalyzing}
-                  onClick={runAnalysis}
-                  className={`w-full py-2.5 px-4 rounded-[var(--radius-input)] font-medium text-xs transition-colors flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
-                    !imageBase64 || isAnalyzing
-                      ? "bg-[var(--color-paper-3)] text-[var(--color-muted)] cursor-not-allowed"
-                      : "bg-[var(--color-ink)] hover:bg-[var(--color-ink-2)] text-[var(--color-paper)] cursor-pointer"
-                  }`}
-                >
-                  {isAnalyzing ? (
-                    <span>Analyzing…</span>
-                  ) : (
-                    <span>Analyze {docName ? `"${docName}"` : "document"}</span>
-                  )}
-                </button>
-              </div>
+        {/* Source Mode Toggle: Preset Documents vs Custom Upload */}
+        <div className="stationery-sheet p-5 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-[var(--color-rule)]">
+            <div className="flex items-center gap-1.5 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)]">
+              <button
+                type="button"
+                onClick={() => setSourceMode("preset")}
+                className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                  sourceMode === "preset"
+                    ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                    : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                }`}
+              >
+                Sample presets (13)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSourceMode("upload")}
+                className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                  sourceMode === "upload"
+                    ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                    : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                }`}
+              >
+                Upload PDF or photo
+              </button>
             </div>
+
+            <span className="text-[11px] text-[var(--color-muted)] font-mono">
+              {sourceMode === "preset"
+                ? "One-click test documents: zero quota consumed"
+                : "Client-side resize and PII masking before transmission"}
+            </span>
           </div>
 
-          <div className="lg:col-span-7">
-            <div className="bg-[var(--color-cotton)] border border-[var(--color-rule)] rounded-[var(--radius-card)] p-5">
-              <DemoDocPicker
-                onSelectDoc={handleSelectDemo}
-                selectedDocId={selectedDemoId}
-                disabled={isAnalyzing}
-              />
-            </div>
-          </div>
+          {sourceMode === "preset" ? (
+            <DemoDocPicker
+              onSelectDoc={handleSelectDemo}
+              selectedDocId={selectedDemoId}
+              disabled={isAnalyzing}
+            />
+          ) : (
+            <FileUpload
+              onImageReady={handleCustomUpload}
+              disabled={isAnalyzing}
+            />
+          )}
         </div>
 
-        {/* Step Indicator Progress */}
+        {/* Step Indicator Scan Bar (Active during analysis) */}
         <StepIndicator
           currentStep={currentStep}
           isComplete={isComplete}
           error={error}
         />
 
-        {/* Results */}
-        {(extractedData || explanationText) && (
-          <section className="space-y-6 pt-2">
-            {extractedData && (
-              <ResultCard
-                docType={docType || "income_tax_notice"}
-                data={extractedData}
-                flags={flags}
-                severity={severity}
-              />
-            )}
+        {/* Two-Pane Workspace Studio */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Pane: Document Inspection Desk */}
+          <div className="lg:col-span-5 space-y-4">
+            <DocumentViewer
+              selectedDemoId={selectedDemoId}
+              uploadedImageBase64={imageBase64}
+              uploadedDocName={docName}
+              language={language}
+              onLanguageChange={setLanguage}
+              onAnalyze={runAnalysis}
+              isAnalyzing={isAnalyzing}
+              canAnalyze={Boolean(imageBase64 || selectedDemoId)}
+            />
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              <div className="lg:col-span-7">
+          {/* Right Pane: Statutory Dossier & Radar */}
+          <div className="lg:col-span-7 space-y-6">
+            {extractedData || explanationText ? (
+              <>
+                {extractedData && (
+                  <ResultCard
+                    docType={docType || "income_tax_notice"}
+                    data={extractedData}
+                    flags={flags}
+                    severity={severity}
+                  />
+                )}
+
                 <ExplanationStream
                   text={explanationText}
                   isStreaming={isAnalyzing && currentStep === 5}
                 />
-              </div>
 
-              <div className="lg:col-span-5">
                 <ActionChecklist
                   docType={docType || "income_tax_notice"}
                   sectionPrinted={extractedData?.notice_section_printed}
@@ -266,25 +291,108 @@ export default function Home() {
                   daysRemaining={extractedData?.days_remaining}
                   severity={severity}
                 />
+              </>
+            ) : (
+              /* Idle Inspection Blueprint */
+              <div className="stationery-sheet p-6 space-y-5">
+                <div className="pb-3 border-b border-[var(--color-rule)] space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-semibold text-[var(--color-ink)]">
+                      Statutory inspection protocol
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-muted)]">
+                      DastaaVault Engine
+                    </span>
+                  </div>
+                  <p className="text-xs text-[var(--color-muted)] leading-relaxed">
+                    When you click &ldquo;Analyze staged document&rdquo;, the engine executes deterministic statutory checks across five legal dimensions.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="letterpress-card p-3.5 space-y-1">
+                    <span className="font-mono font-semibold text-xs text-[var(--color-ink)]">
+                      1. Law reform cross-mapping
+                    </span>
+                    <p className="text-[11px] text-[var(--color-muted)] leading-relaxed">
+                      Maps historic 1961 Act sections (e.g. 143(1), 148) to the new Income Tax Act 2025 sections (e.g. 221(1), 231) effective 1 April 2026.
+                    </p>
+                  </div>
+
+                  <div className="letterpress-card p-3.5 space-y-1">
+                    <span className="font-mono font-semibold text-xs text-[var(--color-ink)]">
+                      2. Deadline countdown in IST
+                    </span>
+                    <p className="text-[11px] text-[var(--color-muted)] leading-relaxed">
+                      Extracts response deadlines directly from notice text and computes exact days remaining against the current Indian Standard Time date.
+                    </p>
+                  </div>
+
+                  <div className="letterpress-card p-3.5 space-y-1">
+                    <span className="font-mono font-semibold text-xs text-[var(--color-ink)]">
+                      3. Rental lock-in trap check
+                    </span>
+                    <p className="text-[11px] text-[var(--color-muted)] leading-relaxed">
+                      Flags clauses where the mandatory lock-in period exceeds the tenant notice period, creating unilateral financial penalty traps.
+                    </p>
+                  </div>
+
+                  <div className="letterpress-card p-3.5 space-y-1">
+                    <span className="font-mono font-semibold text-xs text-[var(--color-ink)]">
+                      4. High stakes and prosecution
+                    </span>
+                    <p className="text-[11px] text-[var(--color-muted)] leading-relaxed">
+                      Identifies demands exceeding ₹1,00,000 or Section 276C prosecution clauses, immediately recommending professional advocate counsel.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-[var(--radius-input)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                  <div className="space-y-0.5">
+                    <span className="font-medium text-[var(--color-ink)]">
+                      Ready to inspect staged document: {docName}
+                    </span>
+                    <p className="text-[11px] text-[var(--color-muted)]">
+                      Click the &ldquo;Analyze staged document&rdquo; button on the left to begin review.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={runAnalysis}
+                    disabled={isAnalyzing}
+                    className="px-4 py-2 rounded-[var(--radius-input)] bg-[var(--color-ink)] hover:bg-[var(--color-ink-2)] text-[var(--color-paper)] text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-focus)]"
+                  >
+                    Start inspection
+                  </button>
+                </div>
               </div>
-            </div>
-          </section>
-        )}
+            )}
+          </div>
+        </div>
       </main>
 
-      {/* Hallmark Masthead Footer */}
-      <footer className="border-t border-[var(--color-rule)] bg-[var(--color-paper-2)] py-8 mt-16 text-xs text-[var(--color-muted)]">
-        <div className="max-w-[1280px] mx-auto px-6 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* Editorial Masthead Footer */}
+      <footer className="border-t border-[var(--color-rule)] bg-[var(--color-paper-2)] py-8 mt-12 text-xs text-[var(--color-muted)]">
+        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center sm:text-left">
             <p className="font-semibold text-[var(--color-ink)]">
               DastaaVault: Indian legal and tax document reviewer
             </p>
             <p>
-              Built for BharatCode Build League 2026. Sourced from Income Tax Act 1961 and 2025 Act statutory mappings.
+              Built for BharatCode Build League 2026. Grounded on Income Tax Act 1961, Income Tax Act 2025, and Registration Act 1908.
             </p>
           </div>
 
           <div className="flex items-center gap-4 text-[var(--color-ink-2)] font-mono text-[11px]">
+            <a
+              href="https://github.com/Anhad-Sharma-26/dastaavault"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+            >
+              GitHub repository
+            </a>
             <span>MIT License</span>
             <span>qwen-3.8-27b</span>
           </div>

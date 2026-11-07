@@ -3,73 +3,85 @@
 import React from "react";
 
 interface StepIndicatorProps {
-  currentStep: number;
-  currentStepName?: string;
-  isComplete?: boolean;
+  currentStep: number; // 0 to 5
+  isComplete: boolean;
   error?: string | null;
 }
+
+const STEPS = [
+  { id: 1, name: "Vision OCR", desc: "Transcribe document" },
+  { id: 2, name: "PII Masking", desc: "Redact PAN and phone" },
+  { id: 3, name: "Classification", desc: "Identify document type" },
+  { id: 4, name: "Statutory Mapping", desc: "1961 ↔ 2025 Act" },
+  { id: 5, name: "Verification", desc: "Rules and explanation" },
+];
 
 export function StepIndicator({
   currentStep,
   isComplete,
   error,
 }: StepIndicatorProps) {
-  const steps = [
-    { num: 1, label: "Transcribing", desc: "Vision OCR" },
-    { num: 2, label: "Classifying", desc: "Notice vs lease" },
-    { num: 3, label: "Extracting", desc: "Structured fields" },
-    { num: 4, label: "Checking", desc: "Section mappings" },
-    { num: 5, label: "Explaining", desc: "Plain language" },
-  ];
-
-  if (currentStep === 0 && !error) return null;
+  if (currentStep === 0 && !isComplete && !error) {
+    return null;
+  }
 
   return (
-    <div className="p-4 rounded-[var(--radius-card)] bg-[var(--color-cotton)] border border-[var(--color-rule)]">
-      <div className="flex items-center justify-between mb-3 text-xs">
+    <div className="bg-[var(--color-cotton)] border border-[var(--color-rule)] rounded-[var(--radius-card)] p-4 space-y-3">
+      <div className="flex items-center justify-between text-xs">
         <span className="font-semibold text-[var(--color-ink)]">
-          {error
-            ? "Analysis halted"
-            : isComplete
-            ? "Analysis complete"
-            : `Processing step ${currentStep} of 5`}
+          Analysis pipeline progress
         </span>
-        <span className="text-[var(--color-muted)] font-mono">
-          {isComplete ? "5 of 5 done" : `step ${currentStep}/5`}
+        <span className="font-mono text-[11px] text-[var(--color-muted)]">
+          {error
+            ? "Halted"
+            : isComplete
+            ? "Complete: 5 of 5 steps finished"
+            : `Step ${currentStep} of 5 in progress`}
         </span>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-        {steps.map((step) => {
-          const isDone = isComplete || currentStep > step.num;
-          const isCurrent = !isComplete && currentStep === step.num;
+        {STEPS.map((step) => {
+          const isDone = isComplete || currentStep > step.id;
+          const isCurrent = !isComplete && currentStep === step.id;
+          const isFailed = error && currentStep === step.id;
+
+          let cardStyle = "bg-[var(--color-paper-2)] border-[var(--color-rule)] text-[var(--color-muted)]";
+          let badgeText = "Pending";
+
+          if (isFailed) {
+            cardStyle = "bg-[color-mix(in_oklab,var(--color-error)_10%,var(--color-paper))] border-[var(--color-error)] text-[var(--color-error)]";
+            badgeText = "Error";
+          } else if (isDone) {
+            cardStyle = "bg-[var(--color-paper-3)] border-[var(--color-rule-2)] text-[var(--color-ink)]";
+            badgeText = "Done";
+          } else if (isCurrent) {
+            cardStyle = "bg-[var(--color-cotton)] border-[var(--color-accent-2)] text-[var(--color-accent-2)] shadow-xs";
+            badgeText = "Running";
+          }
 
           return (
             <div
-              key={step.num}
-              className={`p-2.5 rounded-[var(--radius-input)] border text-xs ${
-                isDone
-                  ? "bg-[var(--color-paper-2)] border-[var(--color-rule-2)] text-[var(--color-ink)]"
-                  : isCurrent
-                  ? "bg-[var(--color-paper-3)] border-[var(--color-ink)] text-[var(--color-ink)] font-semibold"
-                  : "bg-[var(--color-paper)] border-[var(--color-rule)] text-[var(--color-muted)] opacity-60"
-              }`}
+              key={step.id}
+              className={`p-2.5 rounded-[var(--radius-input)] border text-left transition-colors ${cardStyle}`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] font-mono">0{step.num}</span>
-                {isDone && <span className="text-[var(--color-success)] text-xs">✓</span>}
+              <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                <span>0{step.id}</span>
+                <span className="font-semibold">{badgeText}</span>
               </div>
-              <div className="truncate">{step.label}</div>
-              <div className="text-[11px] text-[var(--color-muted)] truncate">
+              <p className="font-medium text-xs truncate text-[var(--color-ink)]">
+                {step.name}
+              </p>
+              <p className="text-[10px] text-[var(--color-muted)] truncate">
                 {step.desc}
-              </div>
+              </p>
             </div>
           );
         })}
       </div>
 
       {error && (
-        <div className="mt-3 p-3 rounded-[var(--radius-input)] bg-[color-mix(in_oklab,var(--color-error)_8%,var(--color-paper))] border border-[var(--color-error)] text-[var(--color-error)] text-xs">
+        <div className="p-3 rounded-[var(--radius-input)] bg-[color-mix(in_oklab,var(--color-error)_10%,var(--color-paper))] border border-[var(--color-error)] text-[var(--color-error)] text-xs">
           {error}
         </div>
       )}
