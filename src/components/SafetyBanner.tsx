@@ -7,47 +7,42 @@ interface SafetyBannerProps {
   highStakesFlags?: string[];
 }
 
-export function SafetyBanner({ criticalSeverity, highStakesFlags = [] }: SafetyBannerProps) {
+export function SafetyBanner({
+  criticalSeverity,
+  highStakesFlags = [],
+}: SafetyBannerProps) {
   return (
     <div className="space-y-3">
       {criticalSeverity && (
-        <div className="p-4 rounded-xl bg-red-950/60 border border-red-500/50 shadow-lg shadow-red-950/40 text-red-200">
-          <div className="flex items-start space-x-3">
-            <span className="text-2xl">🚨</span>
-            <div>
-              <h4 className="font-bold text-red-100 text-sm tracking-wide uppercase">
-                High-Stakes Legal / Demand Notice Detected
-              </h4>
-              <p className="text-xs text-red-200/90 mt-1 leading-relaxed">
-                This document contains high financial demands (&gt; ₹1,00,000) or mentions potential prosecution / court summons.
-                <strong> Do not rely solely on automated analysis.</strong> Please consult a practicing Chartered Accountant (CA) or tax advocate immediately.
-              </p>
-              {highStakesFlags.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {highStakesFlags.map((flag, idx) => (
-                    <span
-                      key={idx}
-                      className="text-[11px] font-semibold bg-red-900/80 text-red-100 px-2 py-0.5 rounded border border-red-700/60"
-                    >
-                      {flag}
-                    </span>
-                  ))}
-                </div>
-              )}
+        <div className="p-4 rounded-[var(--radius-card)] border border-[var(--color-error)] bg-[color-mix(in_oklab,var(--color-error)_8%,var(--color-paper))] text-[var(--color-ink)]">
+          <h4 className="font-semibold text-sm text-[var(--color-error)]">
+            High-stakes legal or demand notice
+          </h4>
+          <p className="text-xs text-[var(--color-ink-2)] mt-1">
+            This notice specifies high financial demands or mentions prosecution
+            proceedings. Consult a practicing Chartered Accountant or tax advocate.
+          </p>
+          {highStakesFlags.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {highStakesFlags.map((flag, idx) => (
+                <span
+                  key={idx}
+                  className="text-xs px-2 py-0.5 rounded-[var(--radius-input)] bg-[var(--color-paper)] border border-[var(--color-rule)] text-[var(--color-ink-2)]"
+                >
+                  {flag}
+                </span>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       )}
 
-      <div className="p-3.5 rounded-xl bg-gray-900/70 border border-gray-800 text-gray-400 text-xs flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center space-x-2">
-          <span className="text-base">🛡️</span>
-          <span>
-            <strong>Client-Side Privacy Guarantee:</strong> PII (PAN, Aadhaar, Phone, Email) is masked before model processing. Zero document persistence.
-          </span>
-        </div>
-        <span className="text-gray-500 text-[11px]">
-          Compliant with DPDP privacy principles
+      <div className="p-3.5 rounded-[var(--radius-card)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-xs text-[var(--color-muted)] flex flex-wrap items-center justify-between gap-2">
+        <span>
+          Personal details (PAN, Aadhaar, contact details) are redacted client-side before processing. Nothing is stored on any server.
+        </span>
+        <span className="text-[var(--color-ink-2)]">
+          DPDP privacy principles
         </span>
       </div>
     </div>

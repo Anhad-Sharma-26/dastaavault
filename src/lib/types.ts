@@ -21,6 +21,8 @@ export interface AnalysisRequest {
   imageBase64: string;
   /** Preferred explanation language. */
   language: Language;
+  /** Optional identifier if testing a synthetic demo document. */
+  demoId?: string;
 }
 
 /** Server-sent event for pipeline progress. */

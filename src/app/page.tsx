@@ -56,7 +56,6 @@ export default function Home() {
     resetState();
 
     try {
-      // Render demo HTML to base64 JPEG
       const base64 = await htmlUrlToImageBase64(`/demo-docs/${demo.fileName}`);
       setImageBase64(base64);
     } catch (err: unknown) {
@@ -79,6 +78,7 @@ export default function Home() {
         body: JSON.stringify({
           imageBase64,
           language,
+          demoId: selectedDemoId || undefined,
         }),
       });
 
@@ -151,7 +151,7 @@ export default function Home() {
                 break;
             }
           } catch {
-            // ignore malformed frame
+            // ignore
           }
         }
       }
@@ -164,39 +164,36 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-white">
+    <div className="min-h-screen bg-[var(--color-paper)] text-[var(--color-ink)] flex flex-col font-sans">
       <Header />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8 space-y-8">
-        {/* Hero Section */}
-        <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold">
-            <span>✨</span> Built for BharatCode Build League 2026
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
-            Don&apos;t panic over legal notices.<br className="hidden sm:inline" /> Understand them in 30 seconds.
+      <main className="flex-1 max-w-[1280px] w-full mx-auto px-6 sm:px-12 py-8 space-y-8">
+        {/* Hallmark Hero Section: Headline <= 7 words, Sentence <= 12 words, Action */}
+        <section className="space-y-3 pt-2">
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--color-ink)]">
+            Decode legal notices and agreements.
           </h1>
-          <p className="text-sm sm:text-base text-gray-400 leading-relaxed">
-            Upload your Indian Income Tax Notice or Rent Agreement. Get structured data, risk flags, statutory cross-mappings (1961 ↔ 2025 Act), deadline countdowns, and plain-language action steps in English, Hindi, or Hinglish.
+          <p className="text-sm sm:text-base text-[var(--color-muted)] max-w-2xl leading-relaxed">
+            Structured facts, risk checks, and deadlines explained in clear language.
           </p>
-        </div>
+        </section>
 
-        {/* Privacy & Safety Alerts */}
+        {/* Safety & Redaction Banner */}
         <SafetyBanner
           criticalSeverity={severity === "critical"}
           highStakesFlags={extractedData?.high_stakes_flags}
         />
 
-        {/* Input & Demo Document Selection */}
+        {/* Workspace: Upload + Sample Picker */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-5 space-y-4">
-            <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-5 shadow-lg space-y-4">
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>📤</span> Upload Document
+            <div className="bg-[var(--color-cotton)] border border-[var(--color-rule)] rounded-[var(--radius-card)] p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-[var(--color-ink)]">
+                Document input
               </h2>
               <FileUpload onImageReady={handleCustomUpload} disabled={isAnalyzing} />
 
-              <div className="pt-2 border-t border-gray-800 space-y-3">
+              <div className="pt-2 border-t border-[var(--color-rule)] space-y-3">
                 <LanguagePicker
                   selected={language}
                   onChange={setLanguage}
@@ -207,22 +204,16 @@ export default function Home() {
                   type="button"
                   disabled={!imageBase64 || isAnalyzing}
                   onClick={runAnalysis}
-                  className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${
+                  className={`w-full py-2.5 px-4 rounded-[var(--radius-input)] font-medium text-xs transition-colors flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
                     !imageBase64 || isAnalyzing
-                      ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white shadow-indigo-600/30 hover:scale-[1.01] cursor-pointer"
+                      ? "bg-[var(--color-paper-3)] text-[var(--color-muted)] cursor-not-allowed"
+                      : "bg-[var(--color-ink)] hover:bg-[var(--color-ink-2)] text-[var(--color-paper)] cursor-pointer"
                   }`}
                 >
                   {isAnalyzing ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                      <span>Analyzing Document...</span>
-                    </>
+                    <span>Analyzing…</span>
                   ) : (
-                    <>
-                      <span>🔍</span>
-                      <span>Analyze {docName ? `"${docName}"` : "Document"}</span>
-                    </>
+                    <span>Analyze {docName ? `"${docName}"` : "document"}</span>
                   )}
                 </button>
               </div>
@@ -230,7 +221,7 @@ export default function Home() {
           </div>
 
           <div className="lg:col-span-7">
-            <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-5 shadow-lg">
+            <div className="bg-[var(--color-cotton)] border border-[var(--color-rule)] rounded-[var(--radius-card)] p-5">
               <DemoDocPicker
                 onSelectDoc={handleSelectDemo}
                 selectedDocId={selectedDemoId}
@@ -247,9 +238,9 @@ export default function Home() {
           error={error}
         />
 
-        {/* Results Showcase */}
+        {/* Results */}
         {(extractedData || explanationText) && (
-          <div className="space-y-6 pt-4">
+          <section className="space-y-6 pt-2">
             {extractedData && (
               <ResultCard
                 docType={docType || "income_tax_notice"}
@@ -277,25 +268,25 @@ export default function Home() {
                 />
               </div>
             </div>
-          </div>
+          </section>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-800 bg-gray-900/40 py-8 mt-12 text-xs text-gray-500">
-        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* Hallmark Masthead Footer */}
+      <footer className="border-t border-[var(--color-rule)] bg-[var(--color-paper-2)] py-8 mt-16 text-xs text-[var(--color-muted)]">
+        <div className="max-w-[1280px] mx-auto px-6 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center sm:text-left">
-            <p className="font-semibold text-gray-300">
-              DastaaVault — Open Source Indian Legal & Tax Document Reviewer
+            <p className="font-semibold text-[var(--color-ink)]">
+              DastaaVault: Indian legal and tax document reviewer
             </p>
             <p>
-              Built by Anhad Sharma for the BharatCode Build League Hackathon (Nov 2026).
+              Built for BharatCode Build League 2026. Sourced from Income Tax Act 1961 and 2025 Act statutory mappings.
             </p>
           </div>
 
-          <div className="flex items-center gap-4 text-gray-400">
-            <span className="px-2 py-1 rounded bg-gray-800 text-[11px] font-mono">MIT License</span>
-            <span className="px-2 py-1 rounded bg-gray-800 text-[11px] font-mono">qwen-3.8-27b</span>
+          <div className="flex items-center gap-4 text-[var(--color-ink-2)] font-mono text-[11px]">
+            <span>MIT License</span>
+            <span>qwen-3.8-27b</span>
           </div>
         </div>
       </footer>
