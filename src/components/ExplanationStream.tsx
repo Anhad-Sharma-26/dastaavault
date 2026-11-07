@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface ExplanationStreamProps {
   text: string;
@@ -32,7 +33,8 @@ export function ExplanationStream({ text, isStreaming }: ExplanationStreamProps)
               What this means for you
             </h3>
             {isStreaming && (
-              <span className="text-[11px] font-mono text-[var(--color-accent-2)]">
+              <span className="text-[11px] font-mono text-[var(--color-accent-2)] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent-2)] animate-ping"></span>
                 Streaming…
               </span>
             )}
@@ -53,8 +55,8 @@ export function ExplanationStream({ text, isStreaming }: ExplanationStreamProps)
         )}
       </div>
 
-      <div className="prose prose-sm max-w-none text-[var(--color-ink)] text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans">
-        {text}
+      <div className="text-[var(--color-ink)] font-sans">
+        <MarkdownRenderer content={text} />
         {isStreaming && (
           <span className="inline-block w-1.5 h-3.5 bg-[var(--color-accent-2)] ml-0.5 align-middle animate-pulse"></span>
         )}
