@@ -9,11 +9,11 @@ interface StepIndicatorProps {
 }
 
 const STEPS = [
-  { id: 1, name: "Vision OCR", desc: "Transcribe document" },
-  { id: 2, name: "PII Masking", desc: "Redact PAN and phone" },
-  { id: 3, name: "Classification", desc: "Identify document type" },
-  { id: 4, name: "Statutory Mapping", desc: "1961 ↔ 2025 Act" },
-  { id: 5, name: "Verification", desc: "Rules and explanation" },
+  { id: 1, name: "Reading text", desc: "Scanning document" },
+  { id: 2, name: "Protecting privacy", desc: "Masking PAN & phone" },
+  { id: 3, name: "Identifying document", desc: "Notice vs agreement" },
+  { id: 4, name: "Checking tax law", desc: "Old vs new section" },
+  { id: 5, name: "Checking risks", desc: "Deadlines & plain summary" },
 ];
 
 export function StepIndicator({
@@ -29,13 +29,13 @@ export function StepIndicator({
     <div className="bg-[var(--color-cotton)] border border-[var(--color-rule)] rounded-[var(--radius-card)] p-4 space-y-3">
       <div className="flex items-center justify-between text-xs">
         <span className="font-semibold text-[var(--color-ink)]">
-          Analysis pipeline progress
+          Review progress
         </span>
         <span className="font-mono text-[11px] text-[var(--color-muted)]">
           {error
             ? "Halted"
             : isComplete
-            ? "Complete: 5 of 5 steps finished"
+            ? "Review complete"
             : `Step ${currentStep} of 5 in progress`}
         </span>
       </div>

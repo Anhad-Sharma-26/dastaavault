@@ -25,14 +25,14 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
         }
         return `TAX DEMAND: ₹${data.demand_amount.toLocaleString("en-IN")}`;
       }
-      return "INQUIRY NOTICE ISSUED";
+      return "INQUIRY NOTICE";
     }
 
     if (isRent) {
       if (severity === "critical" || severity === "high") {
         return "HIGH RISK CLAUSE DETECTED";
       }
-      return "STANDARD 11-MONTH AGREEMENT";
+      return "STANDARD RENT AGREEMENT";
     }
 
     return "DOCUMENT REVIEWED";
@@ -58,12 +58,18 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-muted)]">
-              {isTax ? "Direct Taxes" : isRent ? "Property Law" : "General"}
+              {isTax ? "Income Tax" : isRent ? "Rent Agreement" : "Document"}
             </span>
-            <span className="text-xs text-[var(--color-muted)] font-mono">
-              {data.pan_masked ? `PAN: ${data.pan_masked}` : ""}
-              {data.din_number ? ` · DIN: ${data.din_number}` : ""}
-            </span>
+            {data.pan_masked && (
+              <span className="text-xs text-[var(--color-muted)] font-mono">
+                PAN: {data.pan_masked}
+              </span>
+            )}
+            {data.din_number && (
+              <span className="text-xs text-[var(--color-muted)] font-mono">
+                · DIN: {data.din_number}
+              </span>
+            )}
           </div>
           <h2 className="text-lg sm:text-xl font-semibold text-[var(--color-ink)] tracking-tight">
             {isTax
@@ -89,20 +95,20 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
       {isTax && data.notice_section_printed && (
         <div className="letterpress-card p-4 space-y-2 text-xs">
           <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
-            <span>Statutory Concordance: Income Tax Act 1961 ↔ 2025 Act</span>
-            <span>ICAI Mapped</span>
+            <span>Notice section breakdown (Old vs New Law)</span>
+            <span>Official ICAI mapping</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div className="space-y-0.5">
-              <span className="text-[11px] text-[var(--color-muted)]">Section printed on notice:</span>
+              <span className="text-[11px] text-[var(--color-muted)]">Section printed on your notice:</span>
               <p className="font-mono font-semibold text-sm text-[var(--color-ink)]">
                 u/s {data.notice_section_printed} (1961 Act)
               </p>
             </div>
 
             <div className="space-y-0.5">
-              <span className="text-[11px] text-[var(--color-muted)]">Corresponding section under 2025 Act:</span>
+              <span className="text-[11px] text-[var(--color-muted)]">Equivalent section in new 2025 Act:</span>
               <p className="font-mono font-semibold text-sm text-[var(--color-accent-2)]">
                 u/s {data.notice_section_mapped || "N/A"} (2025 Act)
               </p>
@@ -110,7 +116,7 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
           </div>
 
           <p className="text-[11px] text-[var(--color-muted)] leading-relaxed pt-1">
-            On 1 April 2026, the Income Tax Act 2025 took effect, comprehensively renumbering historic sections. DastaaVault cross-references the section printed on your document with official statutory mappings so you know your exact rights regardless of which version you received.
+            India introduced the new Income Tax Act 2025 on 1 April 2026, renumbering sections. DastaaVault maps both old and new numbers so you know exactly which section applies to your notice.
           </p>
         </div>
       )}
@@ -120,7 +126,7 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
         {/* Metric 1: Financial Outcome */}
         <div className="letterpress-card p-3 space-y-1">
           <span className="text-[11px] text-[var(--color-muted)] font-mono">
-            {isTax ? (data.refund_amount ? "Refund Amount" : "Net Tax Demand") : "Monthly Rent"}
+            {isTax ? (data.refund_amount ? "Refund amount" : "Tax amount due") : "Monthly rent"}
           </span>
           <p className="font-mono font-semibold text-base sm:text-lg text-[var(--color-ink)]">
             {isTax ? (
@@ -129,39 +135,37 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ) : data.demand_amount ? (
                 `₹${data.demand_amount.toLocaleString("en-IN")}`
               ) : (
-                "Nil / Information"
+                "₹0 (Nil)"
               )
             ) : isRent ? (
-              data.rent_amount ? `₹${data.rent_amount.toLocaleString("en-IN")}` : "N/A"
+              data.rent_amount ? `₹${data.rent_amount.toLocaleString("en-IN")}` : "Not stated"
             ) : (
-              "N/A"
+              "Nil"
             )}
           </p>
           <span className="text-[10px] text-[var(--color-muted)] block truncate">
             {isTax
-              ? data.demand_amount
-                ? "Payable upon demand"
-                : "Credited to bank"
+              ? data.refund_amount
+                ? "Will be refunded to bank"
+                : data.demand_amount
+                ? "Payable before deadline"
+                : "No tax payable"
               : isRent && data.deposit_amount
               ? `Security deposit: ₹${data.deposit_amount.toLocaleString("en-IN")}`
-              : "Statutory assessment"}
+              : "Check terms"}
           </span>
         </div>
 
         {/* Metric 2: Deadline */}
         <div className="letterpress-card p-3 space-y-1">
           <span className="text-[11px] text-[var(--color-muted)] font-mono">
-            {isTax ? "Response Deadline" : "Notice Period"}
+            {isTax ? "Last date to respond" : "Notice period"}
           </span>
           <p className="font-mono font-semibold text-base sm:text-lg text-[var(--color-ink)]">
             {isTax ? (
-              data.response_deadline ? (
-                data.response_deadline
-              ) : (
-                "See notice"
-              )
+              data.response_deadline || "As per notice"
             ) : isRent ? (
-              data.notice_period_months ? `${data.notice_period_months} months` : "N/A"
+              data.notice_period_months ? `${data.notice_period_months} months` : "Not stated"
             ) : (
               "N/A"
             )}
@@ -171,43 +175,49 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? `${data.days_remaining} days left in IST`
               : isRent && data.lock_in_months
               ? `Lock-in: ${data.lock_in_months} months`
-              : "Check document dates"}
+              : "Check notice date"}
           </span>
         </div>
 
         {/* Metric 3: Authentication / Authority */}
         <div className="letterpress-card p-3 space-y-1">
           <span className="text-[11px] text-[var(--color-muted)] font-mono">
-            {isTax ? "Issuing Authority" : "Tenure / Term"}
+            {isTax ? "Issuing office" : "Tenure"}
           </span>
           <p className="font-mono font-semibold text-sm sm:text-base text-[var(--color-ink)] truncate">
             {isTax ? (
-              data.issuing_authority || "CPC Bengaluru"
+              data.issuing_authority || "Income Tax Department"
             ) : isRent ? (
-              data.lease_duration_months ? `${data.lease_duration_months} months` : "11 months"
+              data.lease_duration_months ? `${data.lease_duration_months} months` : "Not stated"
             ) : (
               "Verified"
             )}
           </p>
           <span className="text-[10px] text-[var(--color-muted)] block truncate">
             {isTax && data.din_number
-              ? "Valid DIN on record"
+              ? "Official DIN verified"
               : isRent && data.lease_duration_months && data.lease_duration_months >= 12
               ? "Registration compulsory"
-              : "Standard term"}
+              : "Statutory record"}
           </span>
         </div>
 
         {/* Metric 4: Severity & Risk Rating */}
         <div className="letterpress-card p-3 space-y-1">
           <span className="text-[11px] text-[var(--color-muted)] font-mono">
-            Risk Classification
+            Risk rating
           </span>
           <p className="font-mono font-semibold text-base sm:text-lg text-[var(--color-ink)] capitalize">
-            {severity}
+            {severity === "critical"
+              ? "Urgent attention"
+              : severity === "high"
+              ? "High attention"
+              : severity === "medium"
+              ? "Medium attention"
+              : "Low risk"}
           </p>
           <span className="text-[10px] text-[var(--color-muted)] block truncate">
-            {flags.length} verification flags flagged
+            {flags.length} {flags.length === 1 ? "check flagged" : "checks flagged"}
           </span>
         </div>
       </div>
@@ -216,7 +226,7 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
       {flags && flags.length > 0 && (
         <div className="space-y-3 pt-2">
           <h3 className="text-xs font-semibold text-[var(--color-ink)]">
-            Deterministic statutory verification checks
+            Important checks &amp; warnings
           </h3>
 
           <div className="space-y-2">

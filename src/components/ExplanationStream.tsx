@@ -29,7 +29,7 @@ export function ExplanationStream({ text, isStreaming }: ExplanationStreamProps)
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-semibold text-[var(--color-ink)]">
-              Statutory analysis memorandum
+              What this means for you
             </h3>
             {isStreaming && (
               <span className="text-[11px] font-mono text-[var(--color-accent-2)]">
@@ -38,7 +38,7 @@ export function ExplanationStream({ text, isStreaming }: ExplanationStreamProps)
             )}
           </div>
           <p className="text-[11px] text-[var(--color-muted)]">
-            Plain language breakdown grounded strictly on document clauses
+            Clear explanation of your document in simple everyday language
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export function ExplanationStream({ text, isStreaming }: ExplanationStreamProps)
             onClick={handleCopy}
             className="text-xs px-3 py-1.5 rounded-[var(--radius-input)] bg-[var(--color-paper-2)] hover:bg-[var(--color-paper-3)] text-[var(--color-ink-2)] transition-colors cursor-pointer border border-[var(--color-rule)] whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] font-mono"
           >
-            {copied ? "Copied" : "Copy memorandum"}
+            {copied ? "Copied" : "Copy text"}
           </button>
         )}
       </div>

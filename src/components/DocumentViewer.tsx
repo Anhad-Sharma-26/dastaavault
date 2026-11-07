@@ -30,57 +30,47 @@ export function DocumentViewer({
   return (
     <div className="stationery-sheet p-5 sm:p-6 space-y-5 flex flex-col justify-between min-h-[560px]">
       {/* Document Sheet Header */}
-      <div className="space-y-2 pb-4 border-b border-[var(--color-rule)]">
+      <div className="space-y-1.5 pb-4 border-b border-[var(--color-rule)]">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-accent-2)]"></span>
-            <span className="font-mono text-xs font-semibold text-[var(--color-ink)]">
-              Document inspection desk
+            <span className="font-semibold text-xs text-[var(--color-ink)]">
+              Your document
             </span>
           </div>
 
           <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-muted)]">
             {uploadedImageBase64 && !selectedDemoId
-              ? "Custom upload"
+              ? "Uploaded file"
               : selectedDemoId
-              ? "Synthetic ground truth"
-              : "No document loaded"}
+              ? "Sample document"
+              : "No document chosen"}
           </span>
         </div>
 
         <p className="text-xs text-[var(--color-muted)]">
           {uploadedDocName
-            ? `Active file: ${uploadedDocName}`
-            : "Select a sample document above or upload your own notice to review."}
+            ? `Ready to check: ${uploadedDocName}`
+            : "Pick a sample document above or upload your own file to begin."}
         </p>
       </div>
 
-      {/* Document Body / Live Inspection Sheet */}
+      {/* Document Body / Preview */}
       <div className="flex-1 flex flex-col justify-center">
         {selectedDemoId && sim ? (
           <div className="rounded-[var(--radius-input)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] p-4 sm:p-5 font-mono text-xs text-[var(--color-ink)] space-y-3 leading-relaxed shadow-xs">
             <div className="flex items-center justify-between pb-2 border-b border-[var(--color-rule-2)] text-[11px] text-[var(--color-muted)]">
-              <span>CONFIDENTIAL · STATUTORY RECORD</span>
-              <span>IST COMPLIANCE</span>
+              <span>Text from document</span>
+              <span>Local preview</span>
             </div>
 
             <div className="whitespace-pre-wrap font-mono text-[11px] sm:text-xs text-[var(--color-ink-2)] bg-[var(--color-cotton)] p-3.5 rounded border border-[var(--color-rule)] max-h-[300px] overflow-y-auto">
               {sim.transcription}
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[10px] text-[var(--color-muted)] pt-1">
-              <div>
-                <span className="text-[var(--color-ink)]">Doc classification: </span>
-                {sim.doc_type === "income_tax_notice"
-                  ? "Income tax notice"
-                  : sim.doc_type === "rent_agreement"
-                  ? "Rent agreement"
-                  : "Edge case / unsupported"}
-              </div>
-              <div className="text-right">
-                <span className="text-[var(--color-ink)]">PII state: </span>
-                Redacted before model call
-              </div>
+            <div className="flex items-center justify-between text-[10px] text-[var(--color-muted)] pt-1">
+              <span>Document loaded</span>
+              <span>PAN &amp; personal numbers masked</span>
             </div>
           </div>
         ) : uploadedImageBase64 ? (
@@ -94,7 +84,7 @@ export function DocumentViewer({
               />
             </div>
             <span className="text-[11px] text-[var(--color-muted)] font-mono">
-              Ready for client-side OCR and verification
+              Ready to analyze
             </span>
           </div>
         ) : (
@@ -103,10 +93,10 @@ export function DocumentViewer({
               DV
             </div>
             <p className="font-medium text-xs text-[var(--color-ink)]">
-              No document currently staged
+              No document selected
             </p>
             <p className="text-[11px]">
-              Select any of the 13 sample documents above to test immediately, or drop your own notice or agreement.
+              Select any sample notice or agreement above, or drop your PDF/photo here.
             </p>
           </div>
         )}
@@ -166,7 +156,7 @@ export function DocumentViewer({
                 : "bg-[var(--color-ink)] hover:bg-[var(--color-ink-2)] text-[var(--color-paper)] cursor-pointer"
             }`}
           >
-            {isAnalyzing ? "Analyzing…" : "Analyze"}
+            {isAnalyzing ? "Analyzing…" : "Analyze document"}
           </button>
         </div>
       </div>

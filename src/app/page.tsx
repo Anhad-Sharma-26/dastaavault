@@ -297,52 +297,52 @@ export default function Home() {
               <div className="stationery-sheet p-6 space-y-5">
                 <div className="pb-3 border-b border-[var(--color-rule)] space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-semibold text-[var(--color-ink)]">
-                      Statutory inspection protocol
+                    <span className="font-semibold text-xs text-[var(--color-ink)]">
+                      What we check for you
                     </span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-muted)]">
-                      DastaaVault Engine
+                      Automated review
                     </span>
                   </div>
                   <p className="text-xs text-[var(--color-muted)] leading-relaxed">
-                    When you click &ldquo;Analyze staged document&rdquo;, the engine executes deterministic statutory checks across five legal dimensions.
+                    Click &ldquo;Analyze document&rdquo; to begin. We will automatically review:
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div className="letterpress-card p-3.5 space-y-1">
-                    <span className="font-mono font-semibold text-xs text-[var(--color-ink)]">
-                      1. Law reform cross-mapping
+                    <span className="font-semibold text-xs text-[var(--color-ink)]">
+                      1. Old vs new tax law
                     </span>
                     <p className="text-[11px] text-[var(--color-muted)] leading-relaxed">
-                      Maps historic 1961 Act sections (e.g. 143(1), 148) to the new Income Tax Act 2025 sections (e.g. 221(1), 231) effective 1 April 2026.
+                      Checks whether your notice uses the old 1961 Act or the new 2025 Act section numbers effective 1 April 2026.
                     </p>
                   </div>
 
                   <div className="letterpress-card p-3.5 space-y-1">
-                    <span className="font-mono font-semibold text-xs text-[var(--color-ink)]">
-                      2. Deadline countdown in IST
+                    <span className="font-semibold text-xs text-[var(--color-ink)]">
+                      2. Exact deadline and days left
                     </span>
                     <p className="text-[11px] text-[var(--color-muted)] leading-relaxed">
-                      Extracts response deadlines directly from notice text and computes exact days remaining against the current Indian Standard Time date.
+                      Finds the response date from your document and calculates the exact days remaining so you avoid penalty interest.
                     </p>
                   </div>
 
                   <div className="letterpress-card p-3.5 space-y-1">
-                    <span className="font-mono font-semibold text-xs text-[var(--color-ink)]">
-                      3. Rental lock-in trap check
+                    <span className="font-semibold text-xs text-[var(--color-ink)]">
+                      3. Unfair rental lock-in traps
                     </span>
                     <p className="text-[11px] text-[var(--color-muted)] leading-relaxed">
-                      Flags clauses where the mandatory lock-in period exceeds the tenant notice period, creating unilateral financial penalty traps.
+                      Warns you if a lock-in period is longer than your notice period or if deposit forfeiture terms are overly harsh.
                     </p>
                   </div>
 
                   <div className="letterpress-card p-3.5 space-y-1">
-                    <span className="font-mono font-semibold text-xs text-[var(--color-ink)]">
-                      4. High stakes and prosecution
+                    <span className="font-semibold text-xs text-[var(--color-ink)]">
+                      4. High tax demands or penalties
                     </span>
                     <p className="text-[11px] text-[var(--color-muted)] leading-relaxed">
-                      Identifies demands exceeding ₹1,00,000 or Section 276C prosecution clauses, immediately recommending professional advocate counsel.
+                      Flags any demand over ₹1,00,000 or prosecution warning, advising you when to consult a licensed Chartered Accountant.
                     </p>
                   </div>
                 </div>
@@ -350,10 +350,10 @@ export default function Home() {
                 <div className="p-4 rounded-[var(--radius-input)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                   <div className="space-y-0.5">
                     <span className="font-medium text-[var(--color-ink)]">
-                      Ready to inspect staged document: {docName}
+                      Ready to review: {docName || "your document"}
                     </span>
                     <p className="text-[11px] text-[var(--color-muted)]">
-                      Click the &ldquo;Analyze staged document&rdquo; button on the left to begin review.
+                      Click the button to inspect this document.
                     </p>
                   </div>
 
@@ -363,7 +363,7 @@ export default function Home() {
                     disabled={isAnalyzing}
                     className="px-4 py-2 rounded-[var(--radius-input)] bg-[var(--color-ink)] hover:bg-[var(--color-ink-2)] text-[var(--color-paper)] text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-focus)]"
                   >
-                    Start inspection
+                    Analyze now
                   </button>
                 </div>
               </div>

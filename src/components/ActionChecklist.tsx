@@ -76,7 +76,7 @@ export function ActionChecklist({
       if (deadline) {
         items.push({
           id: "calendar-deadline",
-          text: `Submit statutory response before ${deadline} (${daysRemaining !== undefined && daysRemaining !== null ? `${daysRemaining} days left` : "check notice"}).`,
+          text: `Submit response before ${deadline} (${daysRemaining !== undefined && daysRemaining !== null ? `${daysRemaining} days left` : "check notice"}).`,
           urgency: "urgent",
         });
       }
@@ -134,10 +134,10 @@ export function ActionChecklist({
       <div className="flex items-center justify-between pb-3 border-b border-[var(--color-rule)]">
         <div>
           <h3 className="text-base font-semibold text-[var(--color-ink)]">
-            Action checklist
+            Recommended next steps
           </h3>
           <p className="text-[11px] text-[var(--color-muted)]">
-            Suggested statutory next steps based on document flags
+            Things you should do to handle this document on time
           </p>
         </div>
 

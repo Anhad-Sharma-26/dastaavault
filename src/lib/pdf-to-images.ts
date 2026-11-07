@@ -12,9 +12,10 @@
 
 import * as pdfjs from "pdfjs-dist";
 
-// Set the PDF.js worker source to the CDN matching the installed version.
-// The version is read at runtime so it stays in sync with the package.
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+// Set the PDF.js worker source to the local bundle in public folder to prevent CDN failures
+if (typeof window !== "undefined") {
+  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+}
 
 /** Target scale factor for rendering (2× for good OCR readability). */
 const RENDER_SCALE = 2;
