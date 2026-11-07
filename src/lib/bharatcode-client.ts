@@ -1,10 +1,11 @@
 /**
  * @module bharatcode-client
- * @description Server-side API client for the BharatCode model API.
+ * @description Server-side API client for the BharatCode model API with automatic
+ * multi-provider fallback.
  *
- * Uses the OpenAI-compatible `/responses` endpoint with the
- * `qwen-3.8-27b` model.  Includes automatic retry with exponential
- * back-off on 503 responses and token-usage tracking.
+ * Primary: BharatCode OpenAI-compatible API (`qwen-3.8-27b`).
+ * Fallback: OpenAI, Groq, OpenRouter, or custom provider when primary encounters
+ * quota exhaustion (HTTP 429), subscription requirements (HTTP 402), or downtime (HTTP 503).
  *
  * ⚠️  This module must only be imported in server-side code
  *     (API routes, server components, server actions).
@@ -21,14 +22,58 @@ const MODEL = process.env.BHARATCODE_MODEL || "qwen-3.8-27b";
 const MAX_RETRIES = 3;
 const INITIAL_BACKOFF_MS = 1_000;
 
-function getApiKey(): string {
-  const key = process.env.BHARATCODE_API_KEY;
-  if (!key) {
-    throw new Error(
-      "BHARATCODE_API_KEY is not set. Add it to your .env.local file."
-    );
+function getApiKey(): string | null {
+  return process.env.BHARATCODE_API_KEY || null;
+}
+
+/**
+ * Detect and resolve fallback API configuration from environment variables.
+ */
+export function getFallbackConfig(): {
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+  provider: string;
+} | null {
+  const apiKey =
+    process.env.FALLBACK_API_KEY ||
+    process.env.OPENAI_API_KEY ||
+    process.env.GROQ_API_KEY ||
+    process.env.OPENROUTER_API_KEY;
+
+  if (!apiKey) return null;
+
+  let baseUrl = process.env.FALLBACK_BASE_URL;
+  let model = process.env.FALLBACK_MODEL;
+  let provider = "custom";
+
+  if (!baseUrl) {
+    if (process.env.GROQ_API_KEY) {
+      baseUrl = "https://api.groq.com/openai/v1";
+      model = model || "llama-3.3-70b-versatile";
+      provider = "Groq";
+    } else if (process.env.OPENROUTER_API_KEY) {
+      baseUrl = "https://openrouter.ai/api/v1";
+      model = model || "qwen/qwen-2.5-72b-instruct";
+      provider = "OpenRouter";
+    } else {
+      baseUrl = "https://api.openai.com/v1";
+      model = model || "gpt-4o-mini";
+      provider = "OpenAI";
+    }
   }
-  return key;
+
+  return {
+    apiKey,
+    baseUrl: baseUrl.replace(/\/+$/, ""),
+    model: model || "gpt-4o-mini",
+    provider,
+  };
+}
+
+/** Check if an HTTP status should trigger the fallback provider. */
+function shouldFallback(status: number): boolean {
+  return [401, 402, 429, 500, 502, 503, 504].includes(status);
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -73,6 +118,10 @@ interface APIResponse {
     output_tokens: number;
     total_tokens: number;
   };
+  choices?: Array<{
+    message?: { content?: string };
+    finish_reason?: string;
+  }>;
 }
 
 /** Result from a non-streaming model call. */
@@ -88,14 +137,10 @@ export interface ModelResult {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Sleep for `ms` milliseconds. */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Build the fetch request body.
- */
 function buildBody(
   messages: Message[],
   options: CallOptions & {
@@ -125,9 +170,6 @@ function buildBody(
   return body;
 }
 
-/**
- * Parse the output text from an API response (supports both /responses and /chat/completions).
- */
 function extractText(data: any): string {
   // 1. OpenAI chat completions format
   if (data.choices && Array.isArray(data.choices) && data.choices[0]?.message?.content) {
@@ -152,30 +194,38 @@ function extractText(data: any): string {
   return "";
 }
 
-/**
- * Parse token usage from an API response.
- */
-function extractUsage(data: APIResponse): TokenUsage {
+function extractUsage(data: any): TokenUsage {
   if (data.usage) {
     return {
-      input_tokens: data.usage.input_tokens ?? 0,
-      output_tokens: data.usage.output_tokens ?? 0,
+      input_tokens: data.usage.input_tokens ?? data.usage.prompt_tokens ?? 0,
+      output_tokens: data.usage.output_tokens ?? data.usage.completion_tokens ?? 0,
       total_tokens: data.usage.total_tokens ?? 0,
     };
   }
   return { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
 }
 
+function formatApiError(status: number, rawText: string): string {
+  try {
+    const parsed = JSON.parse(rawText);
+    if (parsed.error?.message) {
+      return `BharatCode API (${status}): ${parsed.error.message}`;
+    }
+  } catch {
+    // fallback
+  }
+  return `BharatCode API error ${status}: ${rawText}`;
+}
+
 // ─── Core fetch with retry ───────────────────────────────────────────────────
 
-/**
- * Execute a fetch to the responses endpoint with retry on 503.
- */
-async function fetchWithRetry(
-  body: Record<string, unknown>
-): Promise<Response> {
+async function fetchWithRetry(body: Record<string, unknown>): Promise<Response> {
   const url = `${BASE_URL}/responses`;
   const apiKey = getApiKey();
+
+  if (!apiKey) {
+    throw new Error("BHARATCODE_API_KEY is not set.");
+  }
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const response = await fetch(url, {
@@ -191,7 +241,6 @@ async function fetchWithRetry(
       return response;
     }
 
-    // Exponential back-off: 1s, 2s, 4s
     const backoff = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
     console.warn(
       `[bharatcode-client] 503 received, retrying in ${backoff}ms (attempt ${attempt + 1}/${MAX_RETRIES})`
@@ -199,60 +248,51 @@ async function fetchWithRetry(
     await sleep(backoff);
   }
 
-  // Should not reach here, but satisfy TS
   throw new Error("Max retries exceeded");
 }
 
-// ─── Public API ──────────────────────────────────────────────────────────────
+// ─── Fallback Engine ──────────────────────────────────────────────────────────
 
-/** Format an API error with clean human-readable message if JSON. */
-function formatApiError(status: number, rawText: string): string {
-  try {
-    const parsed = JSON.parse(rawText);
-    if (parsed.error?.message) {
-      return `BharatCode API (${status}): ${parsed.error.message}`;
-    }
-  } catch {
-    // fallback to raw
+async function callFallbackModel(
+  messages: Message[],
+  options?: CallOptions & { responseFormat?: any }
+): Promise<ModelResult> {
+  const config = getFallbackConfig();
+  if (!config) {
+    throw new Error("No fallback API key configured.");
   }
-  return `BharatCode API error ${status}: ${rawText}`;
-}
 
-/**
- * Non-streaming model call.
- *
- * @param params.messages - Conversation messages.
- * @param params.options  - Call options.
- * @returns Parsed model result with text and usage.
- */
-export async function callModel(params: {
-  messages: Message[];
-  options?: CallOptions;
-}): Promise<ModelResult> {
-  const body = buildBody(params.messages, {
-    ...params.options,
-    stream: false,
+  console.log(`[bharatcode-client] Routing call to fallback provider: ${config.provider} (${config.model})`);
+
+  const url = `${config.baseUrl}/chat/completions`;
+  const body: Record<string, any> = {
+    model: config.model,
+    messages,
+    max_tokens: options?.maxOutputTokens ?? options?.maxTokens ?? 4096,
+  };
+
+  if (options?.responseFormat) {
+    body.response_format = options.responseFormat;
+  }
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify(body),
   });
-  const response = await fetchWithRetry(body);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(formatApiError(response.status, errorText));
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Fallback API (${config.provider} ${res.status}): ${errText}`);
   }
 
-  const data = (await response.json()) as APIResponse;
+  const json = await res.json();
+  const text = extractText(json);
+  const usage = extractUsage(json);
 
-  const text = extractText(data);
-  const usage = extractUsage(data);
-  const incomplete = data.status === "incomplete";
-
-  if (incomplete) {
-    console.warn(
-      "[bharatcode-client] Response status is 'incomplete' — output may be truncated."
-    );
-  }
-
-  // Track tokens
   addTokens(usage);
 
   return {
@@ -260,47 +300,51 @@ export async function callModel(params: {
     parsed: null,
     usage,
     tokensUsed: usage.total_tokens,
-    confidence: incomplete ? "low" : "high",
-    finishReason: data.status ?? null,
-    incomplete,
+    confidence: "high",
+    finishReason: json.choices?.[0]?.finish_reason ?? null,
+    incomplete: false,
   };
 }
 
-/**
- * Streaming model call. Yields text chunks as they arrive via SSE.
- *
- * @param params.messages - Conversation messages.
- * @param params.options  - Call options (stream is forced to true).
- * @yields Text delta strings.
- * @returns Final token usage after the stream completes.
- */
-export async function* callModelStreaming(params: {
-  messages: Message[];
-  options?: CallOptions;
-}): AsyncGenerator<string, TokenUsage, undefined> {
-  const body = buildBody(params.messages, {
-    ...params.options,
+async function* callFallbackStreaming(
+  messages: Message[],
+  options?: CallOptions
+): AsyncGenerator<string, TokenUsage, undefined> {
+  const config = getFallbackConfig();
+  if (!config) {
+    throw new Error("No fallback API key configured.");
+  }
+
+  console.log(`[bharatcode-client] Streaming via fallback provider: ${config.provider} (${config.model})`);
+
+  const url = `${config.baseUrl}/chat/completions`;
+  const body = {
+    model: config.model,
+    messages,
     stream: true,
+    max_tokens: options?.maxOutputTokens ?? options?.maxTokens ?? 4096,
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify(body),
   });
-  const response = await fetchWithRetry(body);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(formatApiError(response.status, errorText));
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Fallback streaming error (${config.provider} ${res.status}): ${errText}`);
   }
 
-  const reader = response.body?.getReader();
-  if (!reader) {
-    throw new Error("No readable stream in response");
-  }
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error("No readable stream in fallback response");
 
   const decoder = new TextDecoder();
   let buffer = "";
-  let finalUsage: TokenUsage = {
-    input_tokens: 0,
-    output_tokens: 0,
-    total_tokens: 0,
-  };
+  let finalUsage: TokenUsage = { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
 
   try {
     while (true) {
@@ -308,46 +352,30 @@ export async function* callModelStreaming(params: {
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-
-      // Process SSE lines
       const lines = buffer.split("\n");
-      buffer = lines.pop() ?? ""; // Keep incomplete line in buffer
+      buffer = lines.pop() ?? "";
 
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed || !trimmed.startsWith("data: ")) continue;
-
-        const jsonStr = trimmed.slice(6); // Remove "data: "
-        if (jsonStr === "[DONE]") continue;
+        const dataStr = trimmed.slice(6);
+        if (dataStr === "[DONE]") continue;
 
         try {
-          const event = JSON.parse(jsonStr);
-
-          // Text delta
-          if (event.type === "response.output_text.delta" && event.delta) {
-            yield event.delta;
+          const parsed = JSON.parse(dataStr);
+          const chunk = parsed.choices?.[0]?.delta?.content;
+          if (chunk) {
+            yield chunk;
           }
-
-          // Final usage
-          if (event.type === "response.completed" && event.response?.usage) {
+          if (parsed.usage) {
             finalUsage = {
-              input_tokens: event.response.usage.input_tokens ?? 0,
-              output_tokens: event.response.usage.output_tokens ?? 0,
-              total_tokens: event.response.usage.total_tokens ?? 0,
+              input_tokens: parsed.usage.prompt_tokens ?? 0,
+              output_tokens: parsed.usage.completion_tokens ?? 0,
+              total_tokens: parsed.usage.total_tokens ?? 0,
             };
           }
-
-          // Incomplete warning
-          if (
-            event.type === "response.completed" &&
-            event.response?.status === "incomplete"
-          ) {
-            console.warn(
-              "[bharatcode-client] Streaming response incomplete — output may be truncated."
-            );
-          }
         } catch {
-          // Skip malformed SSE lines
+          // skip malformed SSE lines
         }
       }
     }
@@ -355,25 +383,168 @@ export async function* callModelStreaming(params: {
     reader.releaseLock();
   }
 
-  // Track tokens
   addTokens(finalUsage);
-
   return finalUsage;
 }
 
-/**
- * Send an image + text prompt to the model (vision call).
- *
- * @param imageBase64 - Base-64 encoded JPEG/PNG image data (without data URI prefix).
- * @param prompt      - Text instructions for the model.
- * @param options     - Call options.
- */
+// ─── Public API ──────────────────────────────────────────────────────────────
+
+export async function callModel(params: {
+  messages: Message[];
+  options?: CallOptions;
+}): Promise<ModelResult> {
+  const fallbackAvailable = Boolean(getFallbackConfig());
+
+  try {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      if (fallbackAvailable) {
+        return await callFallbackModel(params.messages, params.options);
+      }
+      throw new Error("BHARATCODE_API_KEY is not set.");
+    }
+
+    const body = buildBody(params.messages, {
+      ...params.options,
+      stream: false,
+    });
+    const response = await fetchWithRetry(body);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      if (shouldFallback(response.status) && fallbackAvailable) {
+        console.warn(`[bharatcode-client] Primary API returned ${response.status}. Falling back to configured fallback model...`);
+        return await callFallbackModel(params.messages, params.options);
+      }
+      throw new Error(formatApiError(response.status, errorText));
+    }
+
+    const data = (await response.json()) as APIResponse;
+    const text = extractText(data);
+    const usage = extractUsage(data);
+    const incomplete = data.status === "incomplete";
+
+    addTokens(usage);
+
+    return {
+      text,
+      parsed: null,
+      usage,
+      tokensUsed: usage.total_tokens,
+      confidence: incomplete ? "low" : "high",
+      finishReason: data.status ?? null,
+      incomplete,
+    };
+  } catch (err: unknown) {
+    if (fallbackAvailable) {
+      console.warn(`[bharatcode-client] Primary API error: ${(err as Error).message}. Attempting fallback provider...`);
+      return await callFallbackModel(params.messages, params.options);
+    }
+    throw err;
+  }
+}
+
+export async function* callModelStreaming(params: {
+  messages: Message[];
+  options?: CallOptions;
+}): AsyncGenerator<string, TokenUsage, undefined> {
+  const fallbackAvailable = Boolean(getFallbackConfig());
+
+  try {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      if (fallbackAvailable) {
+        yield* callFallbackStreaming(params.messages, params.options);
+        return { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+      }
+      throw new Error("BHARATCODE_API_KEY is not set.");
+    }
+
+    const body = buildBody(params.messages, {
+      ...params.options,
+      stream: true,
+    });
+    const response = await fetchWithRetry(body);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      if (shouldFallback(response.status) && fallbackAvailable) {
+        console.warn(`[bharatcode-client] Primary streaming API returned ${response.status}. Falling back...`);
+        yield* callFallbackStreaming(params.messages, params.options);
+        return { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+      }
+      throw new Error(formatApiError(response.status, errorText));
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("No readable stream in response");
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let finalUsage: TokenUsage = {
+      input_tokens: 0,
+      output_tokens: 0,
+      total_tokens: 0,
+    };
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data: ")) continue;
+
+          const jsonStr = trimmed.slice(6);
+          if (jsonStr === "[DONE]") continue;
+
+          try {
+            const event = JSON.parse(jsonStr);
+
+            if (event.type === "response.output_text.delta" && event.delta) {
+              yield event.delta;
+            }
+
+            if (event.type === "response.completed" && event.response?.usage) {
+              finalUsage = {
+                input_tokens: event.response.usage.input_tokens ?? 0,
+                output_tokens: event.response.usage.output_tokens ?? 0,
+                total_tokens: event.response.usage.total_tokens ?? 0,
+              };
+            }
+          } catch {
+            // skip
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    addTokens(finalUsage);
+    return finalUsage;
+  } catch (err: unknown) {
+    if (fallbackAvailable) {
+      console.warn(`[bharatcode-client] Primary streaming failed: ${(err as Error).message}. Attempting fallback provider...`);
+      yield* callFallbackStreaming(params.messages, params.options);
+      return { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+    }
+    throw err;
+  }
+}
+
 export async function callModelWithVision(
   imageBase64: string,
   prompt: string,
   options?: CallOptions
 ): Promise<ModelResult> {
-  // Determine MIME type from the first bytes (default to JPEG)
   const mime = imageBase64.startsWith("/9j/")
     ? "image/jpeg"
     : imageBase64.startsWith("iVBOR")
@@ -397,68 +568,103 @@ export async function callModelWithVision(
   return callModel({ messages, options });
 }
 
-/**
- * Call the model with structured JSON output.
- *
- * @param prompt     - Text prompt.
- * @param jsonSchema - JSON Schema object the model must conform to.
- * @param options    - Call options.
- */
 export async function callModelWithStructuredOutput(
   prompt: string,
   jsonSchema: Record<string, unknown>,
   options?: CallOptions & { schemaName?: string }
 ): Promise<ModelResult> {
-  const body = buildBody(
-    [{ role: "user", content: prompt }],
+  const fallbackAvailable = Boolean(getFallbackConfig());
+
+  try {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      if (fallbackAvailable) {
+        return await callFallbackStructured(prompt, jsonSchema, options);
+      }
+      throw new Error("BHARATCODE_API_KEY is not set.");
+    }
+
+    const body = buildBody(
+      [{ role: "user", content: prompt }],
+      {
+        ...options,
+        stream: false,
+        textFormat: {
+          type: "json_schema",
+          name: options?.schemaName ?? "structured_output",
+          schema: jsonSchema,
+        },
+      }
+    );
+
+    const response = await fetchWithRetry(body);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      if (shouldFallback(response.status) && fallbackAvailable) {
+        console.warn(`[bharatcode-client] Primary API returned ${response.status}. Attempting structured fallback...`);
+        return await callFallbackStructured(prompt, jsonSchema, options);
+      }
+      throw new Error(formatApiError(response.status, errorText));
+    }
+
+    const data = (await response.json()) as APIResponse;
+    const text = extractText(data);
+    const usage = extractUsage(data);
+    const incomplete = data.status === "incomplete";
+
+    addTokens(usage);
+
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      console.warn("[bharatcode-client] Structured output response could not be parsed as JSON.");
+    }
+
+    return {
+      text,
+      parsed,
+      usage,
+      tokensUsed: usage.total_tokens,
+      confidence: incomplete ? "low" : "high",
+      finishReason: data.status ?? null,
+      incomplete,
+    };
+  } catch (err: unknown) {
+    if (fallbackAvailable) {
+      console.warn(`[bharatcode-client] Primary structured call failed: ${(err as Error).message}. Attempting fallback...`);
+      return await callFallbackStructured(prompt, jsonSchema, options);
+    }
+    throw err;
+  }
+}
+
+async function callFallbackStructured(
+  prompt: string,
+  jsonSchema: Record<string, unknown>,
+  options?: CallOptions & { schemaName?: string }
+): Promise<ModelResult> {
+  const promptWithSchema = `${prompt}\n\nYou MUST respond with ONLY a valid JSON object strictly conforming to this JSON schema:\n${JSON.stringify(jsonSchema, null, 2)}\n\nDo not include backticks, markdown fences, or commentary. Output pure JSON.`;
+
+  const result = await callFallbackModel(
+    [{ role: "user", content: promptWithSchema }],
     {
       ...options,
-      stream: false,
-      textFormat: {
-        type: "json_schema",
-        name: options?.schemaName ?? "structured_output",
-        schema: jsonSchema,
-      },
+      responseFormat: { type: "json_object" },
     }
   );
 
-  const response = await fetchWithRetry(body);
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(formatApiError(response.status, errorText));
-  }
-
-  const data = (await response.json()) as APIResponse;
-
-  const text = extractText(data);
-  const usage = extractUsage(data);
-  const incomplete = data.status === "incomplete";
-
-  if (incomplete) {
-    console.warn(
-      "[bharatcode-client] Structured output response incomplete — output may be truncated."
-    );
-  }
-
-  addTokens(usage);
-
   let parsed: any = null;
   try {
-    parsed = JSON.parse(text);
+    const cleaned = result.text.replace(/```(?:json)?/g, "").trim();
+    parsed = JSON.parse(cleaned);
   } catch {
-    console.warn(
-      "[bharatcode-client] Structured output response could not be parsed as JSON."
-    );
+    console.warn("[bharatcode-client] Fallback structured output could not be parsed as JSON.");
   }
 
   return {
-    text,
+    ...result,
     parsed,
-    usage,
-    tokensUsed: usage.total_tokens,
-    confidence: incomplete ? "low" : "high",
-    finishReason: data.status ?? null,
-    incomplete,
   };
 }
