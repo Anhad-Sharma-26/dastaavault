@@ -13,8 +13,20 @@ interface ResultCardProps {
 export function ResultCard({ docType, data, flags, severity }: ResultCardProps) {
   const isTax = docType === "income_tax_notice";
   const isRent = docType === "rent_agreement";
+  const isForm = docType === "statutory_form";
+  const isGeneral = docType === "unsupported";
+  const isBlank = data.is_blank_template ?? (isForm ? true : false);
 
   const getStampText = () => {
+    if (isForm) {
+      if (isBlank) return "EMPTY STATUTORY TEMPLATE";
+      return "STATUTORY FILING FORM";
+    }
+
+    if (isGeneral) {
+      return "GENERAL DOCUMENT";
+    }
+
     if (isTax) {
       if (data.refund_amount) {
         return `REFUND APPROVED: ₹${data.refund_amount.toLocaleString("en-IN")}`;
@@ -39,6 +51,9 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
   };
 
   const getStampColor = () => {
+    if (isForm && isBlank) {
+      return "border-[var(--color-ink-2)] text-[var(--color-ink)] bg-[var(--color-paper-2)]";
+    }
     switch (severity) {
       case "critical":
         return "border-[var(--color-error)] text-[var(--color-error)] bg-[color-mix(in_oklab,var(--color-error)_8%,var(--color-paper))]";
@@ -51,6 +66,9 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
     }
   };
 
+  const printedSection = data.notice_section_printed || data.rule_or_section;
+  const mappedSection = data.notice_section_mapped;
+
   return (
     <div className="stationery-sheet p-6 space-y-6">
       {/* Top Bar with Document Name and Status Stamp */}
@@ -58,7 +76,15 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-muted)]">
-              {isTax ? "Income Tax" : isRent ? "Rent Agreement" : "Document"}
+              {isTax
+                ? "Income Tax"
+                : isRent
+                ? "Rent Agreement"
+                : isForm
+                ? isBlank
+                  ? "Statutory Form (Template)"
+                  : "Statutory Form"
+                : "General Document"}
             </span>
             {data.pan_masked && (
               <span className="text-xs text-[var(--color-muted)] font-mono">
@@ -76,11 +102,21 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? data.notice_type_name || "Income Tax Notice"
               : isRent
               ? "Residential Rental Agreement"
-              : "Document Analysis"}
+              : isForm
+              ? data.form_name || "Statutory Form"
+              : data.title || data.notice_type_name || "Document Overview"}
           </h2>
           <p className="text-xs text-[var(--color-muted)]">
             {isTax && data.assessment_year ? `Assessment Year ${data.assessment_year}` : ""}
             {isRent && data.property_address ? `Property: ${data.property_address}` : ""}
+            {isForm && (
+              <>
+                {printedSection ? `Governed under ${printedSection} · ` : ""}
+                {data.act_name || "Income-tax Rules"}
+                {isBlank ? " · Unfilled blank format" : " · Filled form"}
+              </>
+            )}
+            {isGeneral && (data.summary || "General document")}
             {data.issuing_authority ? ` · Authority: ${data.issuing_authority}` : ""}
           </p>
         </div>
@@ -92,31 +128,31 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
       </div>
 
       {/* Statutory Section Concordance Card (1961 Act ↔ 2025 Act) */}
-      {isTax && data.notice_section_printed && (
+      {(isTax || isForm) && printedSection && (
         <div className="letterpress-card p-4 space-y-2 text-xs">
           <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
-            <span>Notice section breakdown (Old vs New Law)</span>
+            <span>Statutory section breakdown (Old vs New Law)</span>
             <span>Official ICAI mapping</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div className="space-y-0.5">
-              <span className="text-[11px] text-[var(--color-muted)]">Section printed on your notice:</span>
+              <span className="text-[11px] text-[var(--color-muted)]">Section printed on your document:</span>
               <p className="font-mono font-semibold text-sm text-[var(--color-ink)]">
-                u/s {data.notice_section_printed} (1961 Act)
+                u/s {printedSection} (1961 Act / Rules)
               </p>
             </div>
 
             <div className="space-y-0.5">
               <span className="text-[11px] text-[var(--color-muted)]">Equivalent section in new 2025 Act:</span>
               <p className="font-mono font-semibold text-sm text-[var(--color-accent-2)]">
-                u/s {data.notice_section_mapped || "N/A"} (2025 Act)
+                u/s {mappedSection || "Corresponding Provision"} (2025 Act)
               </p>
             </div>
           </div>
 
           <p className="text-[11px] text-[var(--color-muted)] leading-relaxed pt-1">
-            India introduced the new Income Tax Act 2025 on 1 April 2026, renumbering sections. DastaaVault maps both old and new numbers so you know exactly which section applies to your notice.
+            India introduced the new Income Tax Act 2025 on 1 April 2026, renumbering sections. DastaaVault maps both old and new numbers so you know exactly which section applies to your document.
           </p>
         </div>
       )}
@@ -126,10 +162,20 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
         {/* Metric 1: Financial Outcome */}
         <div className="letterpress-card p-3 space-y-1">
           <span className="text-[11px] text-[var(--color-muted)] font-mono">
-            {isTax ? (data.refund_amount ? "Refund amount" : "Tax amount due") : "Monthly rent"}
+            {isForm
+              ? "Tax demand"
+              : isTax
+              ? data.refund_amount
+                ? "Refund amount"
+                : "Tax amount due"
+              : isRent
+              ? "Monthly rent"
+              : "Amount recorded"}
           </span>
           <p className="font-mono font-semibold text-base sm:text-lg text-[var(--color-ink)]">
-            {isTax ? (
+            {isForm ? (
+              isBlank ? "₹0 (Template)" : "₹0"
+            ) : isTax ? (
               data.refund_amount ? (
                 `₹${data.refund_amount.toLocaleString("en-IN")}`
               ) : data.demand_amount ? (
@@ -138,20 +184,26 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
                 "₹0 (Nil)"
               )
             ) : isRent ? (
-              data.rent_amount ? `₹${data.rent_amount.toLocaleString("en-IN")}` : "Not stated"
+              data.monthly_rent ? `₹${data.monthly_rent.toLocaleString("en-IN")}` : "Not stated"
+            ) : data.amount_due || data.demand_amount ? (
+              `₹${(data.amount_due || data.demand_amount).toLocaleString("en-IN")}`
             ) : (
               "Nil"
             )}
           </p>
           <span className="text-[10px] text-[var(--color-muted)] block truncate">
-            {isTax
+            {isForm
+              ? isBlank
+                ? "No liability assessed"
+                : "Statutory format"
+              : isTax
               ? data.refund_amount
                 ? "Will be refunded to bank"
                 : data.demand_amount
                 ? "Payable before deadline"
                 : "No tax payable"
-              : isRent && data.deposit_amount
-              ? `Security deposit: ₹${data.deposit_amount.toLocaleString("en-IN")}`
+              : isRent && data.security_deposit
+              ? `Security deposit: ₹${data.security_deposit.toLocaleString("en-IN")}`
               : "Check terms"}
           </span>
         </div>
@@ -159,46 +211,70 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
         {/* Metric 2: Deadline */}
         <div className="letterpress-card p-3 space-y-1">
           <span className="text-[11px] text-[var(--color-muted)] font-mono">
-            {isTax ? "Last date to respond" : "Notice period"}
+            {isForm
+              ? "Filing window"
+              : isTax
+              ? "Last date to respond"
+              : isRent
+              ? "Notice period"
+              : "Due date"}
           </span>
           <p className="font-mono font-semibold text-base sm:text-lg text-[var(--color-ink)]">
-            {isTax ? (
+            {isForm ? (
+              data.response_deadline || "As per rules"
+            ) : isTax ? (
               data.response_deadline || "As per notice"
             ) : isRent ? (
               data.notice_period_months ? `${data.notice_period_months} months` : "Not stated"
             ) : (
-              "N/A"
+              data.due_date || "N/A"
             )}
           </p>
           <span className="text-[10px] text-[var(--color-muted)] block truncate">
-            {isTax && data.days_remaining !== undefined && data.days_remaining !== null
+            {isForm
+              ? isBlank
+                ? "Prior to ITR / filing"
+                : "Check tax calendar"
+              : isTax && data.days_remaining !== undefined && data.days_remaining !== null
               ? `${data.days_remaining} days left in IST`
               : isRent && data.lock_in_months
               ? `Lock-in: ${data.lock_in_months} months`
-              : "Check notice date"}
+              : "Statutory schedule"}
           </span>
         </div>
 
         {/* Metric 3: Authentication / Authority */}
         <div className="letterpress-card p-3 space-y-1">
           <span className="text-[11px] text-[var(--color-muted)] font-mono">
-            {isTax ? "Issuing office" : "Tenure"}
+            {isForm
+              ? "Prescribed authority"
+              : isTax
+              ? "Issuing office"
+              : isRent
+              ? "Tenure"
+              : "Authority"}
           </span>
           <p className="font-mono font-semibold text-sm sm:text-base text-[var(--color-ink)] truncate">
-            {isTax ? (
+            {isForm ? (
+              data.issuing_authority || "Income Tax Department"
+            ) : isTax ? (
               data.issuing_authority || "Income Tax Department"
             ) : isRent ? (
-              data.lease_duration_months ? `${data.lease_duration_months} months` : "Not stated"
+              data.duration_months ? `${data.duration_months} months` : "Not stated"
             ) : (
-              "Verified"
+              data.issuing_authority || "Issuer"
             )}
           </p>
           <span className="text-[10px] text-[var(--color-muted)] block truncate">
-            {isTax && data.din_number
+            {isForm
+              ? isBlank
+                ? "Blank template"
+                : "Statutory record"
+              : isTax && data.din_number
               ? "Official DIN verified"
-              : isRent && data.lease_duration_months && data.lease_duration_months >= 12
+              : isRent && data.duration_months && data.duration_months >= 12
               ? "Registration compulsory"
-              : "Statutory record"}
+              : "Official record"}
           </span>
         </div>
 
@@ -208,7 +284,9 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
             Risk rating
           </span>
           <p className="font-mono font-semibold text-base sm:text-lg text-[var(--color-ink)] capitalize">
-            {severity === "critical"
+            {isForm && isBlank
+              ? "Informational"
+              : severity === "critical"
               ? "Urgent attention"
               : severity === "high"
               ? "High attention"

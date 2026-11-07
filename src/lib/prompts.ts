@@ -3,7 +3,7 @@
  * @description All prompt templates for the DastaaVault analysis pipeline.
  *
  * Each function returns a string prompt ready to be sent to the model.
- * The prompts are designed for the BharatCode / Qwen model.
+ * The prompts are designed for the BharatCode / Qwen / Gemini models.
  */
 
 import type { Language } from "@/lib/types";
@@ -29,28 +29,39 @@ Output the transcribed text and nothing else.`;
 
 /**
  * Classification prompt — classifies transcribed text into one of the
- * supported document types.
+ * supported document types and detects if it is an empty template.
  *
  * @param text - The transcribed (and PII-masked) document text.
  */
 export function getClassificationPrompt(text: string): string {
-  return `You are a document classifier for Indian documents. Given the transcribed text of a document, classify it into exactly one of the following categories:
+  return `You are an expert document classifier for Indian documents. Given the transcribed text of a document, classify it into exactly one of the following categories:
 
-1. "income_tax_notice" — Any notice, intimation, demand notice, penalty order, or assessment communication issued by the Income Tax Department of India (e.g., sections 139(9), 142(1), 143(1), 144, 147, 148, 154, 156, 221, 231, 245, 271, 276C, or their 2025-Act equivalents). Note: blank statutory application templates or routine stock broker statements (such as Form 1 or Form 7) are not notices issued to a taxpayer with a tax demand.
+1. "income_tax_notice" — Any notice, intimation, demand notice, penalty order, or assessment communication issued to a taxpayer by the Income Tax Department of India (e.g., sections 139(9), 142(1), 143(1), 144, 147, 148, 154, 156, 221, 231, 245, 271, 276C, or their 2025-Act equivalents) with assessment details or demands.
 2. "rent_agreement" — A residential or commercial rent / lease deed or agreement between a landlord and tenant.
-3. "unsupported" — Any other document type (e.g., blank procedural forms, invoices, utility bills, identity cards, corporate reports).
+3. "statutory_form" — Any Indian statutory form, procedural filing format, declaration, certificate, or rule template (e.g., Form No. 7 application u/s 35(2AA), Form No. 1, Form 10BA, Form 15G/H, Form 16 format, Form 26AS template, ITR templates) — whether it is an empty blank template or filled in.
+4. "unsupported" — Any other general document (e.g., electricity or utility bills, invoices, identity cards, corporate reports).
 
 Rules:
-- Be confident. Only classify as "income_tax_notice" or "rent_agreement" if you are reasonably sure.
-- If classifying as "unsupported", specify what document it appears to be in the "reason" field (e.g., "Statutory filing form: Form No. 7 application for scientific research", "Form No. 1 stock exchange statement", "Electricity utility bill").
+- If the document is a blank statutory form with unfilled tables/blanks, classify as "statutory_form" and set "is_empty_or_template" to true.
+- Identify the exact form title in "form_name" (e.g. "Form No. 7: Application for approval of scientific research programme under section 35(2AA)").
+- If a section or rule is cited (e.g. "35(2AA)" or "Rule 5F"), put it in "section_ref".
 - Provide a confidence score between 0 and 1.
+- Provide a brief justification in "reason".
 
 Transcribed text:
 ---
 ${text}
 ---
 
-Respond with valid JSON matching this schema: { "doc_type": string, "confidence": number, "reason": string }`;
+Respond with valid JSON matching this schema:
+{
+  "doc_type": "income_tax_notice" | "rent_agreement" | "statutory_form" | "unsupported",
+  "is_empty_or_template": boolean,
+  "form_name": string | null,
+  "section_ref": string | null,
+  "confidence": number,
+  "reason": string
+}`;
 }
 
 /**
@@ -58,7 +69,7 @@ Respond with valid JSON matching this schema: { "doc_type": string, "confidence"
  * transcribed text according to the document type.
  *
  * @param text - PII-masked transcribed text.
- * @param docType - One of "income_tax_notice" or "rent_agreement".
+ * @param docType - One of "income_tax_notice", "rent_agreement", "statutory_form", or "unsupported".
  * @param sectionMappingContext - Optional context about section mappings.
  */
 export function getExtractionPrompt(
@@ -97,8 +108,8 @@ ${text}
 Extract all fields and respond with valid JSON matching the Income Tax Notice schema.`;
   }
 
-  // Rent Agreement
-  return `You are an expert Indian real estate document analyst. Extract structured information from the following rent/lease agreement text.
+  if (docType === "rent_agreement") {
+    return `You are an expert Indian real estate document analyst. Extract structured information from the following rent/lease agreement text.
 
 IMPORTANT RULES:
 1. Work from the masked text below — do NOT try to reconstruct any redacted PII.
@@ -124,6 +135,53 @@ ${text}
 ---
 
 Extract all fields and respond with valid JSON matching the Rent Agreement schema.`;
+  }
+
+  if (docType === "statutory_form") {
+    return `You are an expert Indian statutory & tax document analyst. Extract structured information from the following statutory form text (even if it is a blank or empty template).
+
+Context on Section Mappings (1961 ↔ 2025 Act):
+${sectionMappingContext || "No mapping context available."}
+
+IMPORTANT RULES:
+1. Extract "form_name" (e.g. "Form No. 7: Application for approval of scientific research programme under section 35(2AA)").
+2. Extract "rule_or_section" (e.g. "35(2AA)", "Rule 5F", "10BA").
+3. Set "notice_section_printed" to the section number printed (e.g. "35(2AA)").
+4. Set "notice_section_mapped" to any related section under the new 2025 Act or related tax code, or null.
+5. Set "is_blank_template" to true if the form has blank fields / empty tables / uncompleted rows, false if filled with actual assessee data.
+6. In "purpose", explain what this form is officially used for in Indian law (e.g. "Application by sponsors to obtain approval from the Prescribed Authority for scientific research programmes to claim weighted tax deduction under Section 35(2AA)").
+7. In "target_audience", state who submits it (e.g. "Assessees / Corporate sponsors funding scientific research at National Labs, IITs, or Universities").
+8. In "key_requirements", list 3-5 bullet points of required information or attachments (e.g. ["Details of the sponsor", "Title and objective of research programme", "Budget and timeline of expenditure", "Certification from National Laboratory / University"]).
+9. Set "issuing_authority" to the receiving or prescribed authority (e.g. "Prescribed Authority / DGIT Exemptions").
+10. Set "severity" to "low" (blank statutory forms carry zero tax liability).
+
+Masked document text:
+---
+${text}
+---
+
+Extract all fields and respond with valid JSON matching the Statutory Form schema.`;
+  }
+
+  // Unsupported / General Document
+  return `You are a document analyst. Extract structured identification from the following general or non-tax document.
+
+Masked document text:
+---
+${text}
+---
+
+Extract:
+1. "title": Exact document name or description (e.g. "Electricity Consumption Bill", "Retail Invoice").
+2. "summary": One clear sentence summarizing what the document is.
+3. "issuing_authority": Entity or authority that issued it (e.g. "BSES Rajdhani Power Limited").
+4. "reference_number": Consumer number, account number, or invoice reference, or null.
+5. "amount_due": Any amount payable or recorded in INR, or null.
+6. "due_date": Any due date mentioned, or null.
+7. "is_blank_template": Whether it is an unfilled template format.
+8. "severity": "low".
+
+Extract all fields and respond with valid JSON matching the General Document schema.`;
 }
 
 /**
@@ -146,10 +204,21 @@ export function getExplanationPrompt(
       "Explanation Hinglish mein likho — Hindi aur English mix karo, jaise log normally baat karte hain. Technical terms English mein rakh sakte ho.",
   }[language];
 
-  const docTypeGuidance =
-    docType === "income_tax_notice"
-      ? `This is an Income Tax notice. If both old (1961 Act) and new (2025 Act) section numbers are available, mention BOTH so the reader understands regardless of which Act they know.`
-      : `This is a Rent Agreement. Focus on tenant rights and obligations, financial commitments, and any clauses that may be unfavourable.`;
+  let docTypeGuidance = "";
+  if (docType === "income_tax_notice") {
+    docTypeGuidance = `This is an Income Tax notice. If both old (1961 Act) and new (2025 Act) section numbers are available, mention BOTH so the reader understands regardless of which Act they know.`;
+  } else if (docType === "rent_agreement") {
+    docTypeGuidance = `This is a Rent Agreement. Focus on tenant rights and obligations, financial commitments, and any clauses that may be unfavourable.`;
+  } else if (docType === "statutory_form") {
+    docTypeGuidance = `This is an Indian Statutory Form or Template (e.g. Form No. 7 under Section 35(2AA), Form No. 1, etc.).
+IMPORTANT:
+- If this is a blank template, reassure the reader right away: "This is an UNFILLED STATUTORY TEMPLATE. It does NOT contain any tax demand, penalty, or adverse proceeding against you."
+- Explain clearly what the form is used for in Indian tax law, who needs to file it, and what key information or attachments are required to fill it.
+- Explain the statutory section context (e.g. Section 35(2AA) weighted deduction for scientific research).
+- Provide practical next steps if they intend to complete or submit this form.`;
+  } else {
+    docTypeGuidance = `This is a general or non-assessment document (such as a utility bill, invoice, or certificate). Explain what it is in simple terms, note any financial amounts or dates mentioned, and clarify that it is outside tax notice or rent lease scope.`;
+  }
 
   return `You are a helpful document advisor explaining an Indian legal/financial document to a common person who may not have legal or tax knowledge.
 
@@ -161,11 +230,10 @@ Rules:
 1. Start with a ONE-LINE summary of what this document is and what it means for the reader.
 2. Then explain each important finding in 2-3 simple sentences. Use bullet points.
 3. When quoting amounts, dates, or specific text from the document, put them in **bold**.
-4. If there are any warnings or red flags, highlight them clearly with ⚠️ emoji.
+4. If there are any warnings or red flags, highlight them clearly with ⚠️ emoji. If it is an empty statutory template, clearly note that there is zero demand or penalty.
 5. At the end, provide a NUMBERED ACTION CHECKLIST — specific steps the reader should take, in order of urgency.
 6. End with this exact disclaimer: "⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or tax advice. Please consult a qualified professional for decisions."
-7. Quote relevant text from the document to support your explanations where helpful.
-8. Keep the total explanation under 800 words.
+7. Keep the total explanation under 800 words.
 
 Structured data:
 \`\`\`json

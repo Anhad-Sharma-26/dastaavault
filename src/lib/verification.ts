@@ -288,3 +288,105 @@ export function verifyRentAgreement(
 
   return { flags, severity };
 }
+
+// ─── Statutory Form / Blank Template Verification ─────────────────────────────
+
+/**
+ * Run verification checks on an Indian statutory form or blank template.
+ *
+ * @param formData - Extracted statutory form information.
+ * @returns Verification result with informational flags and low severity.
+ */
+export function verifyStatutoryForm(formData: Record<string, any>): VerificationResult {
+  const flags: Flag[] = [];
+  const isBlank = formData.is_blank_template ?? true;
+
+  if (isBlank) {
+    flags.push(
+      flag(
+        "blank_template",
+        "info",
+        "Empty / blank statutory template detected",
+        "This document is an unfilled statutory form format. It carries no pending personal tax demand, penalty, or tax liability."
+      )
+    );
+  }
+
+  const sec = formData.rule_or_section || formData.notice_section_printed;
+  if (sec) {
+    flags.push(
+      flag(
+        "statutory_basis",
+        "info",
+        `Governed under ${sec}`,
+        formData.purpose || "Official statutory filing format under Indian tax and corporate law."
+      )
+    );
+
+    const lookup = lookupSection(sec);
+    if (lookup) {
+      const otherAct =
+        lookup.matched_act === "1961"
+          ? `Section ${lookup.new} (2025 Act)`
+          : `Section ${lookup.old} (1961 Act)`;
+      flags.push(
+        flag(
+          "section_mapped",
+          "info",
+          "Section cross-mapping identified",
+          `${sec} maps to ${otherAct} — "${lookup.name}".`
+        )
+      );
+    }
+  }
+
+  if (
+    formData.key_requirements &&
+    Array.isArray(formData.key_requirements) &&
+    formData.key_requirements.length > 0
+  ) {
+    flags.push(
+      flag(
+        "completion_requirements",
+        "info",
+        "Filing prerequisites",
+        `Key components required: ${formData.key_requirements.slice(0, 3).join("; ")}.`
+      )
+    );
+  }
+
+  return { flags, severity: "low" };
+}
+
+// ─── General / Non-Assessment Document Verification ───────────────────────────
+
+/**
+ * Run verification checks on a general or non-assessment document.
+ *
+ * @param docData - Extracted document details.
+ * @returns Verification result with informational flags.
+ */
+export function verifyGeneralDoc(docData: Record<string, any>): VerificationResult {
+  const flags: Flag[] = [
+    flag(
+      "general_overview",
+      "info",
+      "General document overview",
+      docData.summary ||
+        "This document is outside income tax notice or rent agreement jurisdiction. Informational summary generated."
+    ),
+  ];
+
+  if (docData.amount_due) {
+    flags.push(
+      flag(
+        "amount_recorded",
+        "info",
+        "Amount mentioned",
+        `Document references an amount of ₹${docData.amount_due.toLocaleString("en-IN")}.`
+      )
+    );
+  }
+
+  return { flags, severity: "low" };
+}

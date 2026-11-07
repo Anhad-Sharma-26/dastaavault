@@ -117,6 +117,33 @@ export function ActionChecklist({
       ];
     }
 
+    if (docType === "statutory_form") {
+      return [
+        {
+          id: "check-eligibility",
+          text: "Verify statutory eligibility and rules for this form on the Income Tax e-filing portal.",
+          urgency: "urgent",
+          linkText: "e-Filing portal",
+          linkUrl: "https://eportal.incometax.gov.in",
+        },
+        {
+          id: "gather-certificates",
+          text: "Collect required certifications, project budgets, and institutional approvals.",
+          urgency: "recommended",
+        },
+        {
+          id: "complete-blanks",
+          text: "Fill in all sponsor and assessee details, ensuring valid PAN and official designations.",
+          urgency: "recommended",
+        },
+        {
+          id: "consult-ca",
+          text: "Have your Chartered Accountant review the completed form before submission to the Prescribed Authority.",
+          urgency: "optional",
+        },
+      ];
+    }
+
     return [
       {
         id: "consult-expert",

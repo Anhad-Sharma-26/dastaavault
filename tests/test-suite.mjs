@@ -15,6 +15,8 @@ import {
 import {
   verifyITNotice,
   verifyRentAgreement,
+  verifyStatutoryForm,
+  verifyGeneralDoc,
 } from "../src/lib/verification.ts";
 
 import { lookupSection } from "../src/lib/section-mapping.ts";
@@ -174,6 +176,34 @@ test("Verification: Income Tax notice prosecution language triggers critical sev
   const flag = res.flags.find((f) => f.flag_id === "prosecution_risk");
   assert.ok(flag, "Flag prosecution_risk should be raised");
   assert.equal(res.severity, "critical");
+});
+
+test("Verification: Blank statutory form template flags zero liability info", () => {
+  const res = verifyStatutoryForm({
+    doc_type: "statutory_form",
+    form_name: "Form No. 7: Scientific Research Application u/s 35(2AA)",
+    rule_or_section: "35(2AA)",
+    is_blank_template: true,
+    purpose: "Application for approval of scientific research programme",
+    key_requirements: ["Sponsor details", "University certification"],
+  });
+  const blankFlag = res.flags.find((f) => f.flag_id === "blank_template");
+  assert.ok(blankFlag, "Flag blank_template should be present");
+  assert.equal(res.severity, "low");
+});
+
+test("Verification: General document flags informational summary", () => {
+  const res = verifyGeneralDoc({
+    doc_type: "unsupported",
+    title: "Electricity Bill",
+    summary: "Monthly electricity invoice",
+    amount_due: 3410,
+  });
+  const overviewFlag = res.flags.find((f) => f.flag_id === "general_overview");
+  assert.ok(overviewFlag, "Flag general_overview should be present");
+  const amountFlag = res.flags.find((f) => f.flag_id === "amount_recorded");
+  assert.ok(amountFlag, "Flag amount_recorded should be present");
+  assert.equal(res.severity, "low");
 });
 
 // ─── 4. Demo Documents Integrity Tests ──────────────────────────────────────

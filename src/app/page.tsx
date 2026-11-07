@@ -353,7 +353,10 @@ export default function Home() {
 
                 <ActionChecklist
                   docType={docType || "income_tax_notice"}
-                  sectionPrinted={extractedData?.notice_section_printed}
+                  sectionPrinted={
+                    extractedData?.notice_section_printed ||
+                    extractedData?.rule_or_section
+                  }
                   deadline={extractedData?.response_deadline}
                   daysRemaining={extractedData?.days_remaining}
                   severity={severity}

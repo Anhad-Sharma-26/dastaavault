@@ -469,7 +469,17 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
   "unrelated": {
     doc_type: "unsupported",
     transcription: "BSES Rajdhani Power Limited\nELECTRICITY CONSUMPTION BILL\nConsumer: Sanjay Malhotra | CA: 1029384756 | Amount: ₹3,410.00",
-    extracted: {},
+    extracted: {
+      doc_type: "unsupported",
+      title: "Electricity Consumption Bill",
+      summary: "Monthly electricity utility invoice issued by BSES Rajdhani Power Limited.",
+      issuing_authority: "BSES Rajdhani Power Limited",
+      reference_number: "CA 1029384756",
+      amount_due: 3410,
+      due_date: "As per bill cycle",
+      is_blank_template: false,
+      severity: "low",
+    },
     explanation: {
       en: "This document is an electricity consumption bill and is not an Income Tax notice or Rent Agreement.",
       hi: "यह दस्तावेज़ बिजली का बिल है, जो समर्थित श्रेणी (आयकर नोटिस या किराया अनुबंध) में नहीं आता है।",

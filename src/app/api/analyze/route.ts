@@ -24,6 +24,8 @@ import {
   classificationJsonSchema,
   itNoticeJsonSchema,
   rentAgreementJsonSchema,
+  statutoryFormJsonSchema,
+  generalDocJsonSchema,
 } from "@/lib/schemas";
 import {
   getTranscriptionPrompt,
@@ -31,7 +33,12 @@ import {
   getExtractionPrompt,
   getExplanationPrompt,
 } from "@/lib/prompts";
-import { verifyITNotice, verifyRentAgreement } from "@/lib/verification";
+import {
+  verifyITNotice,
+  verifyRentAgreement,
+  verifyStatutoryForm,
+  verifyGeneralDoc,
+} from "@/lib/verification";
 import { getSectionMappingForPrompt } from "@/lib/section-mapping";
 import { addTokens, isAtLimit } from "@/lib/token-tracker";
 import { DEMO_SIMULATIONS, type SimulatedDocResult } from "@/lib/demo-simulator";
@@ -219,15 +226,6 @@ export async function POST(request: Request) {
           await sleep(300);
           emit("classification", { doc_type: sim.doc_type, confidence: 0.98 });
 
-          if (sim.doc_type === "unsupported") {
-            emit("error", {
-              message:
-                "Document identified as an electricity bill. DastaaVault currently specializes in Indian Income Tax Notices and Rent Agreements.",
-            });
-            safeClose();
-            return;
-          }
-
           emitStep("extracting", 4);
           await sleep(400);
           emit("extraction", sim.extracted);
@@ -237,7 +235,9 @@ export async function POST(request: Request) {
           const verification =
             sim.doc_type === "income_tax_notice"
               ? verifyITNotice(sim.extracted as any)
-              : verifyRentAgreement(sim.extracted as any);
+              : sim.doc_type === "rent_agreement"
+              ? verifyRentAgreement(sim.extracted as any)
+              : verifyGeneralDoc(sim.extracted as any);
 
           emit("verification", {
             flags: verification.flags,
@@ -297,26 +297,21 @@ export async function POST(request: Request) {
 
         totalTokensUsed += classification.tokensUsed ?? 0;
 
-        const docType: string = classification.parsed?.doc_type ?? "unknown";
-        const classConfidence: number = classification.parsed?.confidence ?? 0;
+        const docType: string = classification.parsed?.doc_type ?? "income_tax_notice";
+        const classConfidence: number = classification.parsed?.confidence ?? 0.9;
         const reason: string = classification.parsed?.reason?.trim() ?? "";
+        const formName: string = classification.parsed?.form_name?.trim() ?? "";
+        const sectionRef: string = classification.parsed?.section_ref?.trim() ?? "";
+        const isBlankTemplate: boolean = Boolean(classification.parsed?.is_empty_or_template);
 
         emit("classification", {
           doc_type: docType,
           confidence: classConfidence,
           reason,
+          form_name: formName,
+          section_ref: sectionRef,
+          is_empty_or_template: isBlankTemplate,
         });
-
-        // Bail out if the document type is not supported.
-        if (docType === "unsupported" || docType === "unknown") {
-          const detail = reason ? ` (${reason})` : "";
-          emit("error", {
-            message:
-              `Document identified as unsupported${detail}. DastaaVault currently specializes in Indian Income Tax Notices/Intimations (e.g. u/s 143(1), 142(1), 148, 156 with demand/refund determination) and Rent Agreements. Please upload an Income Tax notice or rent deed, or choose from our 13 test presets above.`,
-          });
-          safeClose();
-          return;
-        }
 
         // ---------------------------------------------------------------
         // Step 4 — Extract structured fields
@@ -328,7 +323,11 @@ export async function POST(request: Request) {
         const extractionSchema =
           docType === "income_tax_notice"
             ? itNoticeJsonSchema
-            : rentAgreementJsonSchema;
+            : docType === "rent_agreement"
+            ? rentAgreementJsonSchema
+            : docType === "statutory_form"
+            ? statutoryFormJsonSchema
+            : generalDocJsonSchema;
 
         const extraction = await callModelWithStructuredOutput(
           getExtractionPrompt(maskedText, docType, sectionContext),
@@ -338,7 +337,15 @@ export async function POST(request: Request) {
 
         totalTokensUsed += extraction.tokensUsed ?? 0;
 
-        emit("extraction", extraction.parsed ?? {});
+        const extractedData = {
+          ...(extraction.parsed ?? {}),
+          doc_type: docType,
+          is_blank_template: isBlankTemplate || Boolean(extraction.parsed?.is_blank_template),
+          ...(formName ? { form_name: extraction.parsed?.form_name || formName } : {}),
+          ...(sectionRef ? { rule_or_section: extraction.parsed?.rule_or_section || sectionRef } : {}),
+        };
+
+        emit("extraction", extractedData);
 
         // ---------------------------------------------------------------
         // Step 5 — Verify (code-based, no model call)
@@ -347,8 +354,12 @@ export async function POST(request: Request) {
 
         const verification =
           docType === "income_tax_notice"
-            ? verifyITNotice(extraction.parsed)
-            : verifyRentAgreement(extraction.parsed);
+            ? verifyITNotice(extractedData)
+            : docType === "rent_agreement"
+            ? verifyRentAgreement(extractedData)
+            : docType === "statutory_form"
+            ? verifyStatutoryForm(extractedData)
+            : verifyGeneralDoc(extractedData);
 
         emit("verification", {
           flags: verification.flags,

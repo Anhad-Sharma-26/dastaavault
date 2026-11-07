@@ -7,7 +7,11 @@
 export type Language = "en" | "hi" | "hinglish";
 
 /** Recognised document categories. */
-export type DocType = "income_tax_notice" | "rent_agreement" | "unsupported";
+export type DocType =
+  | "income_tax_notice"
+  | "rent_agreement"
+  | "statutory_form"
+  | "unsupported";
 
 /** Risk severity levels (descending). */
 export type Severity = "critical" | "high" | "medium" | "low";

@@ -164,12 +164,121 @@ export const RentAgreementSchema = z.object({
 
 export type RentAgreementData = z.infer<typeof RentAgreementSchema>;
 
+// ─── Statutory Form / Blank Template ─────────────────────────────────────────
+
+export const StatutoryFormSchema = z.object({
+  doc_type: z.literal("statutory_form"),
+  form_name: z
+    .string()
+    .describe('Official name or title of the statutory form, e.g. "Form No. 7 — Application for approval of scientific research programme under section 35(2AA)"'),
+  rule_or_section: z
+    .string()
+    .nullable()
+    .describe('Rule or section number cited, e.g. "35(2AA)" or "Rule 5F"'),
+  notice_section_printed: z
+    .string()
+    .nullable()
+    .describe("Section number printed on the form"),
+  notice_section_mapped: z
+    .string()
+    .nullable()
+    .describe("Corresponding section under 2025 Act or related section"),
+  act_name: z
+    .string()
+    .default("Income-tax Act, 1961")
+    .describe("Governing Act or legal framework"),
+  is_blank_template: z
+    .boolean()
+    .default(true)
+    .describe("Whether this is a blank/unfilled template or a completed submission"),
+  purpose: z
+    .string()
+    .describe("Statutory purpose of this form under Indian law"),
+  target_audience: z
+    .string()
+    .nullable()
+    .describe("Who is required or eligible to fill and file this form"),
+  key_requirements: z
+    .array(z.string())
+    .describe("Key fields, certifications, or attachments required by the form"),
+  issuing_authority: z
+    .string()
+    .nullable()
+    .describe("Prescribed authority or department where this form is filed"),
+  severity: z
+    .enum(["critical", "high", "medium", "low"])
+    .default("low")
+    .describe("Risk severity (templates are typically low)"),
+  flags: z.array(FlagSchema).default([]),
+  extraction_confidence: z
+    .enum(["high", "medium", "low"])
+    .default("high")
+    .describe("Model confidence in extraction"),
+  uncertain_fields: z.array(z.string()).default([]),
+});
+
+export type StatutoryFormData = z.infer<typeof StatutoryFormSchema>;
+
+// ─── General / Non-Assessment Document ───────────────────────────────────────
+
+export const GeneralDocSchema = z.object({
+  doc_type: z.literal("unsupported"),
+  title: z
+    .string()
+    .describe("Title or descriptive identification of the document"),
+  summary: z
+    .string()
+    .describe("One-sentence summary of the document contents"),
+  issuing_authority: z
+    .string()
+    .nullable()
+    .describe("Issuing entity, company, or authority"),
+  reference_number: z
+    .string()
+    .nullable()
+    .describe("Consumer number, account number, or reference number if any"),
+  amount_due: z
+    .number()
+    .nullable()
+    .describe("Monetary amount mentioned in the document, or null"),
+  due_date: z
+    .string()
+    .nullable()
+    .describe("Due date or deadline if specified, or null"),
+  is_blank_template: z
+    .boolean()
+    .default(false)
+    .describe("Whether this is an unfilled blank format"),
+  severity: z
+    .enum(["critical", "high", "medium", "low"])
+    .default("low"),
+  flags: z.array(FlagSchema).default([]),
+  extraction_confidence: z
+    .enum(["high", "medium", "low"])
+    .default("high"),
+  uncertain_fields: z.array(z.string()).default([]),
+});
+
+export type GeneralDocData = z.infer<typeof GeneralDocSchema>;
+
 // ─── Classification ──────────────────────────────────────────────────────────
 
 export const ClassificationSchema = z.object({
   doc_type: z
-    .enum(["income_tax_notice", "rent_agreement", "unsupported"])
-    .describe("Detected document type"),
+    .enum(["income_tax_notice", "rent_agreement", "statutory_form", "unsupported"])
+    .describe("Detected document type. Use 'statutory_form' for blank or filled statutory tax forms, applications, or rule templates like Form 7, Form 1, Form 10, Form 16 blank, Form 26AS, etc."),
+  is_empty_or_template: z
+    .boolean()
+    .default(false)
+    .describe("True if this is an empty template, blank format, or unfilled form; false if it is a completed document"),
+  form_name: z
+    .string()
+    .nullable()
+    .describe("Form name or document title if identifiable"),
+  section_ref: z
+    .string()
+    .nullable()
+    .describe("Section or rule number cited if identifiable"),
   confidence: z
     .number()
     .min(0)
@@ -192,6 +301,16 @@ export const RentAgreementJSONSchema = toJSONSchema(RentAgreementSchema, {
   target: "draft-2020-12",
 });
 
+/** JSON Schema representation of the Statutory Form extraction schema. */
+export const StatutoryFormJSONSchema = toJSONSchema(StatutoryFormSchema, {
+  target: "draft-2020-12",
+});
+
+/** JSON Schema representation of the General Document extraction schema. */
+export const GeneralDocJSONSchema = toJSONSchema(GeneralDocSchema, {
+  target: "draft-2020-12",
+});
+
 /** JSON Schema representation of the Classification schema. */
 export const ClassificationJSONSchema = toJSONSchema(ClassificationSchema, {
   target: "draft-2020-12",
@@ -202,8 +321,12 @@ export {
   ClassificationJSONSchema as classificationJsonSchema,
   IncomeTaxNoticeJSONSchema as itNoticeJsonSchema,
   RentAgreementJSONSchema as rentAgreementJsonSchema,
+  StatutoryFormJSONSchema as statutoryFormJsonSchema,
+  GeneralDocJSONSchema as generalDocJsonSchema,
 };
 
 export type IncomeTaxNotice = IncomeTaxNoticeData;
 export type RentAgreement = RentAgreementData;
+export type StatutoryForm = StatutoryFormData;
+export type GeneralDoc = GeneralDocData;
 export type Classification = ClassificationData;
