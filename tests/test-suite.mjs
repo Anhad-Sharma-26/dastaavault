@@ -4,29 +4,24 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  maskPAN,
+  maskAadhaar,
+  maskPhone,
+  maskEmail,
+  maskAll,
+} from "../src/lib/pii-masker.ts";
+
+import {
+  verifyITNotice,
+  verifyRentAgreement,
+} from "../src/lib/verification.ts";
+
+import { lookupSection } from "../src/lib/section-mapping.ts";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ─── 1. PII Masking Tests ───────────────────────────────────────────────────
-
-function maskPAN(text) {
-  return text.replace(/\b([A-Z]{4})[A-Z]\d{4}([A-Z])\b/g, "$1****$2");
-}
-
-function maskAadhaar(text) {
-  return text.replace(/\b\d{4}\s?\d{4}\s?(\d{4})\b/g, "XXXX XXXX $1");
-}
-
-function maskPhone(text) {
-  return text.replace(/(?:\+91[\s-]?)?(\d{5})(\d{5})\b/g, "XXXXX$2");
-}
-
-function maskEmail(text) {
-  return text.replace(/\b([a-zA-Z0-9_.+-]{2})[a-zA-Z0-9_.+-]*@([a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)\b/g, "$1***@$2");
-}
-
-function maskAll(text) {
-  return maskEmail(maskPhone(maskAadhaar(maskPAN(text))));
-}
+// ─── 1. PII Masking Tests (Testing real src/lib/pii-masker.ts) ───────────────
 
 test("PII Masker: should mask PAN correctly while preserving format", () => {
   const input = "Assessee PAN is ABCPD1234K for year 2025.";
@@ -45,6 +40,11 @@ test("PII Masker: should mask Phone number", () => {
   assert.match(maskPhone(input), /XXXXX43210/);
 });
 
+test("PII Masker: should preserve 10-digit financial amounts", () => {
+  const input = "Total value of transaction: 1000000000 INR";
+  assert.equal(maskPhone(input), input);
+});
+
 test("PII Masker: should mask Email address", () => {
   const input = "Please write to taxpayer.help@incometax.gov.in";
   assert.match(maskEmail(input), /ta\*\*\*@incometax\.gov\.in/);
@@ -60,7 +60,7 @@ test("PII Masker: should mask all in combined text", () => {
   assert.ok(masked.includes("ABCP****K"));
 });
 
-// ─── 2. Section Mapping Tests ───────────────────────────────────────────────
+// ─── 2. Section Mapping Tests (Testing real src/lib/section-mapping.ts) ──────
 
 const mappingPath = path.join(__dirname, "..", "src", "data", "section-mapping.json");
 const mappingData = JSON.parse(fs.readFileSync(mappingPath, "utf-8"));
@@ -72,59 +72,108 @@ test("Section Mapping: dataset should be valid and well-formed", () => {
 });
 
 test("Section Mapping: cross-mapping old 143(1) to new 221(1)", () => {
-  const entry = mappingData.sections.find((s) => s.old === "143(1)");
-  assert.ok(entry, "143(1) entry exists");
-  assert.equal(entry.new, "221(1)");
-  assert.equal(entry.typical_deadline_days, 30);
+  const res = lookupSection("143(1)");
+  assert.ok(res, "143(1) lookup succeeded");
+  assert.equal(res.new, "221(1)");
+  assert.equal(res.typical_deadline_days, 30);
 });
 
 test("Section Mapping: cross-mapping old 148 to new 231 (reassessment)", () => {
-  const entry = mappingData.sections.find((s) => s.old === "148");
-  assert.ok(entry, "148 entry exists");
-  assert.equal(entry.new, "231");
+  const res = lookupSection("148");
+  assert.ok(res, "148 entry exists");
+  assert.equal(res.new, "231");
 });
 
 test("Section Mapping: cross-mapping new 220 to old 142(1)", () => {
-  const entry = mappingData.sections.find((s) => s.new === "220");
-  assert.ok(entry, "220 entry exists");
-  assert.equal(entry.old, "142(1)");
+  const res = lookupSection("220");
+  assert.ok(res, "220 entry exists");
+  assert.equal(res.old, "142(1)");
 });
 
-// ─── 3. Verification Rules Tests ────────────────────────────────────────────
+// ─── 3. Verification Rules Tests (Testing real src/lib/verification.ts) ───────
 
 test("Verification: Rent agreement lock-in exceeding notice period flags warning", () => {
-  const agreement = {
+  const res = verifyRentAgreement({
+    monthly_rent: 25000,
+    security_deposit: 50000,
     lock_in_months: 6,
     notice_period_months: 1,
-  };
-  const isTrap = agreement.lock_in_months > agreement.notice_period_months;
-  assert.equal(isTrap, true);
+    duration_months: 11,
+    escalation_pct: 5,
+    registration_required: false,
+    parties: { landlord: "A", tenant: "B" },
+    flags: [],
+  });
+  const flag = res.flags.find((f) => f.flag_id === "lock_in_gt_notice");
+  assert.ok(flag, "Flag lock_in_gt_notice should be raised");
+  assert.equal(res.severity, "medium");
 });
 
 test("Verification: Rent agreement escalation > 10% flags high escalation", () => {
-  const agreement = { escalation_pct: 15 };
-  const isHigh = agreement.escalation_pct > 10;
-  assert.equal(isHigh, true);
+  const res = verifyRentAgreement({
+    monthly_rent: 25000,
+    security_deposit: 50000,
+    lock_in_months: 1,
+    notice_period_months: 1,
+    duration_months: 11,
+    escalation_pct: 15,
+    registration_required: false,
+    parties: { landlord: "A", tenant: "B" },
+    flags: [],
+  });
+  const flag = res.flags.find((f) => f.flag_id === "high_escalation");
+  assert.ok(flag, "Flag high_escalation should be raised");
 });
 
 test("Verification: Rent agreement duration >= 12 months requires registration", () => {
-  const agreement = { duration_months: 12, registration_required: false };
-  const needsReg = agreement.duration_months >= 12 && !agreement.registration_required;
-  assert.equal(needsReg, true);
+  const res = verifyRentAgreement({
+    monthly_rent: 25000,
+    security_deposit: 50000,
+    lock_in_months: 1,
+    notice_period_months: 1,
+    duration_months: 12,
+    escalation_pct: 5,
+    registration_required: false,
+    parties: { landlord: "A", tenant: "B" },
+    flags: [],
+  });
+  const flag = res.flags.find((f) => f.flag_id === "needs_registration");
+  assert.ok(flag, "Flag needs_registration should be raised");
+  assert.equal(res.severity, "high");
 });
 
 test("Verification: Income Tax notice demand > 1 lakh triggers critical severity", () => {
-  const notice = { demand_amount: 345000 };
-  const isCritical = notice.demand_amount > 100000;
-  assert.equal(isCritical, true);
+  const res = verifyITNotice({
+    din_number: "ITBA/COM/F/17/2026-27/123",
+    notice_section_printed: "143(1)",
+    assessment_year: "2025-26",
+    demand_amount: 345000,
+    refund_amount: null,
+    response_deadline: "2026-11-30",
+    days_remaining: 20,
+    key_claims: [],
+    severity: "low",
+  });
+  const flag = res.flags.find((f) => f.flag_id === "high_demand");
+  assert.ok(flag, "Flag high_demand should be raised");
+  assert.equal(res.severity, "critical");
 });
 
 test("Verification: Income Tax notice prosecution language triggers critical severity", () => {
-  const notice = {
-    key_claims: ["Penalty initiated", "prosecution proceedings may be initiated u/s 276C"],
-  };
-  const hasProsecution = notice.key_claims.some((c) => /prosecut|criminal|court\s*summon/i.test(c));
-  assert.equal(hasProsecution, true);
+  const res = verifyITNotice({
+    din_number: "ITBA/COM/F/17/2026-27/123",
+    notice_section_printed: "148",
+    assessment_year: "2025-26",
+    demand_amount: null,
+    refund_amount: null,
+    response_deadline: "2026-11-30",
+    days_remaining: 10,
+    key_claims: ["prosecution proceedings may be initiated u/s 276C"],
+    severity: "low",
+  });
+  const flag = res.flags.find((f) => f.flag_id === "prosecution_risk");
+  assert.ok(flag, "Flag prosecution_risk should be raised");
+  assert.equal(res.severity, "critical");
 });
 
 // ─── 4. Demo Documents Integrity Tests ──────────────────────────────────────

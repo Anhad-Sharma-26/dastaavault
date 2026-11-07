@@ -5,9 +5,9 @@
  * deterministic business rules.
  */
 
-import type { IncomeTaxNoticeData, RentAgreementData } from "@/lib/schemas";
-import type { Flag, VerificationResult, Severity } from "@/lib/types";
-import { lookupSection } from "@/lib/section-mapping";
+import type { IncomeTaxNoticeData, RentAgreementData } from "./schemas.ts";
+import type { Flag, VerificationResult, Severity } from "./types.ts";
+import { lookupSection } from "./section-mapping.ts";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

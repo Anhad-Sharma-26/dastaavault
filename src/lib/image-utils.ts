@@ -33,12 +33,12 @@ export function fileToBase64(file: File): Promise<string> {
 
 /**
  * Resize an image file to fit within `maxDimension` (width or height),
- * maintaining aspect ratio.  Returns a base-64 encoded JPEG string
- * (without the data URI prefix).
+ * maintaining aspect ratio.  Returns a base-64 encoded JPEG data URL
+ * (with the data:image/jpeg;base64, prefix).
  *
  * @param file         - Image file to resize.
  * @param maxDimension - Maximum width or height in pixels (default 1600).
- * @returns Raw base-64 JPEG string.
+ * @returns JPEG data URL string.
  */
 export function resizeImage(
   file: File,
@@ -72,15 +72,9 @@ export function resizeImage(
 
       ctx.drawImage(img, 0, 0, width, height);
 
-      // Export as JPEG at 85% quality
+      // Export as JPEG at 85% quality data URL
       const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-      const base64 = dataUrl.split(",")[1];
-      if (!base64) {
-        reject(new Error("Failed to extract base64 from canvas"));
-        return;
-      }
-
-      resolve(base64);
+      resolve(dataUrl);
     };
 
     img.onerror = () => {

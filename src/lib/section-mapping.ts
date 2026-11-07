@@ -7,7 +7,7 @@
  * imported at build-time via `resolveJsonModule`.
  */
 
-import mappingData from "@/data/section-mapping.json";
+import mappingData from "../data/section-mapping.json" with { type: "json" };
 
 /** Shape of a single row in the mapping table. */
 export interface SectionEntry {

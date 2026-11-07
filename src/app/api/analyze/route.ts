@@ -55,12 +55,27 @@ const RATE_LIMIT = 15;
 /** Window duration in milliseconds (5 minutes). */
 const WINDOW_MS = 5 * 60 * 1000;
 
+/** Prune expired IP entries from memory to prevent unbounded map growth. */
+function cleanupExpiredRateLimits(now: number): void {
+  for (const [ip, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetTime) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}
+
 /**
  * Check (and increment) the rate-limit counter for `ip`.
  * Returns `true` if the request is allowed, `false` if the limit is exceeded.
  */
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
+
+  // Prune expired entries periodically to prevent memory leaks
+  if (rateLimitMap.size > 200) {
+    cleanupExpiredRateLimits(now);
+  }
+
   const entry = rateLimitMap.get(ip);
 
   if (!entry || now > entry.resetTime) {
@@ -80,14 +95,22 @@ function checkRateLimit(ip: string): boolean {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Resolve the client IP from common proxy headers. */
+/** Resolve client IP with priority to platform-verified headers. */
 function getClientIp(request: Request): string {
+  const vercelIp = request.headers.get("x-vercel-forwarded-for");
+  if (vercelIp) return vercelIp.split(",")[0].trim();
+
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
-    // x-forwarded-for may contain a comma-separated list; use the first entry.
     return forwarded.split(",")[0].trim();
   }
-  return request.headers.get("x-real-ip") ?? "unknown";
+  return "127.0.0.1";
 }
 
 /**
@@ -141,9 +164,27 @@ export async function POST(request: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      /** Convenience: enqueue a single SSE frame. */
+      let isClosed = false;
+
+      const safeClose = () => {
+        if (!isClosed) {
+          isClosed = true;
+          try {
+            controller.close();
+          } catch {
+            // Controller was already closed or client aborted connection
+          }
+        }
+      };
+
+      /** Convenience: enqueue a single SSE frame safely. */
       const emit = (event: string, data: Record<string, unknown>) => {
-        controller.enqueue(encoder.encode(sseEncode(event, data)));
+        if (isClosed) return;
+        try {
+          controller.enqueue(encoder.encode(sseEncode(event, data)));
+        } catch {
+          isClosed = true;
+        }
       };
 
       /** Emit a progress step indicator. */
@@ -173,7 +214,7 @@ export async function POST(request: Request) {
               message:
                 "This document is not an Indian Income Tax notice or Rent Agreement. DastaaVault currently handles these two document types.",
             });
-            controller.close();
+            safeClose();
             return;
           }
 
@@ -205,7 +246,7 @@ export async function POST(request: Request) {
           }
 
           emit("done", { total_tokens_used: 1200 });
-          controller.close();
+          safeClose();
           return;
         }
 
@@ -259,7 +300,7 @@ export async function POST(request: Request) {
             message:
               "This document type is not supported yet. DastaaVault currently handles Indian income-tax notices and rent agreements.",
           });
-          controller.close();
+          safeClose();
           return;
         }
 
@@ -345,7 +386,7 @@ export async function POST(request: Request) {
 
         emit("error", { message });
       } finally {
-        controller.close();
+        safeClose();
       }
     },
   });

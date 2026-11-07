@@ -37,11 +37,11 @@ export function maskAadhaar(text: string): string {
 /**
  * Mask phone numbers.
  *
- * Pattern: optional `+91` prefix followed by 10 digits.
+ * Pattern: optional `+91` prefix followed by 10 digits starting with 6-9.
  * Output : "XXXXX" + last 5 digits
  */
 export function maskPhone(text: string): string {
-  return text.replace(/(?:\+91[\s-]?)?\d{10}/g, (match) => {
+  return text.replace(/\b(?:\+91[\s-]?)?([6-9]\d{4}[\s-]?\d{5})\b/g, (match) => {
     const digits = match.replace(/\D/g, "");
     return "XXXXX" + digits.slice(-5);
   });
