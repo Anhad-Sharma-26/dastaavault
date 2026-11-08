@@ -172,19 +172,19 @@ export default function Home() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--color-ink)]">
-              Decode Indian legal notices and rent agreements.
+              Decode Indian legal notices, loans, and commercial contracts.
             </h1>
             <p className="text-xs sm:text-sm text-[var(--color-muted)] max-w-2xl leading-relaxed">
-              Deterministic section cross-mapping, deadline countdowns in IST, and clause risk checks in plain English, Hindi, and Hinglish.
+              Deterministic section cross-mapping, RBI &amp; MSMED statutory audits, deadline countdowns in IST, and clause risk checks in plain English, Hindi, and Hinglish.
             </p>
           </div>
 
           <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--color-muted)] shrink-0">
-            <span>13 test presets</span>
+            <span>16 test presets</span>
             <span>:</span>
             <span>ICAI 1961 ↔ 2025 Act</span>
             <span>:</span>
-            <span>qwen-3.8-27b</span>
+            <span>RBI / MSMED code audits</span>
           </div>
         </div>
 
@@ -207,7 +207,7 @@ export default function Home() {
                     : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
                 }`}
               >
-                Sample presets (13)
+                Sample presets (16)
               </button>
               <button
                 type="button"

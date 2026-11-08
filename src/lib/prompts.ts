@@ -39,12 +39,15 @@ export function getClassificationPrompt(text: string): string {
 1. "income_tax_notice" — Any notice, intimation, demand notice, penalty order, or assessment communication issued to a taxpayer by the Income Tax Department of India (e.g., sections 139(9), 142(1), 143(1), 144, 147, 148, 154, 156, 221, 231, 245, 271, 276C, or their 2025-Act equivalents) with assessment details or demands.
 2. "rent_agreement" — A residential or commercial rent / lease deed or agreement between a landlord and tenant.
 3. "statutory_form" — Any Indian statutory form, procedural filing format, declaration, certificate, or rule template (e.g., Form No. 7 application u/s 35(2AA), Form No. 1, Form 10BA, Form 15G/H, Form 16 format, Form 26AS template, ITR templates) — whether it is an empty blank template or filled in.
-4. "unsupported" — Any other general document (e.g., electricity or utility bills, invoices, identity cards, corporate reports).
+4. "loan_sanction" — Any bank or NBFC loan sanction letter, loan agreement, or Key Fact Statement (KFS) table (e.g., home loan, personal loan, MSME term loan, car loan sanction letters from SBI, HDFC, ICICI, etc.).
+5. "gst_notice" — Any GST notice, summary of show cause notice (Form GST DRC-01), pre-SCN intimation (Form GST DRC-01A), or order (DRC-07) issued under Section 73, 74, or 74A of the CGST/SGST Act.
+6. "msme_contract" — Any commercial B2B supplier invoice, purchase order, or vendor supply contract with credit terms governed by the MSMED Act 2006 (Section 15/16) or Income Tax Act Section 43B(h).
+7. "unsupported" — Any other general document (e.g., electricity or utility bills, identity cards, corporate reports).
 
 Rules:
 - If the document is a blank statutory form with unfilled tables/blanks, classify as "statutory_form" and set "is_empty_or_template" to true.
-- Identify the exact form title in "form_name" (e.g. "Form No. 7: Application for approval of scientific research programme under section 35(2AA)").
-- If a section or rule is cited (e.g. "35(2AA)" or "Rule 5F"), put it in "section_ref".
+- Identify the exact form title in "form_name".
+- If a section or rule is cited, put it in "section_ref".
 - Provide a confidence score between 0 and 1.
 - Provide a brief justification in "reason".
 
@@ -55,7 +58,7 @@ ${text}
 
 Respond with valid JSON matching this schema:
 {
-  "doc_type": "income_tax_notice" | "rent_agreement" | "statutory_form" | "unsupported",
+  "doc_type": "income_tax_notice" | "rent_agreement" | "statutory_form" | "loan_sanction" | "gst_notice" | "msme_contract" | "unsupported",
   "is_empty_or_template": boolean,
   "form_name": string | null,
   "section_ref": string | null,
@@ -69,7 +72,7 @@ Respond with valid JSON matching this schema:
  * transcribed text according to the document type.
  *
  * @param text - PII-masked transcribed text.
- * @param docType - One of "income_tax_notice", "rent_agreement", "statutory_form", or "unsupported".
+ * @param docType - One of the supported document types.
  * @param sectionMappingContext - Optional context about section mappings.
  */
 export function getExtractionPrompt(
@@ -137,6 +140,87 @@ ${text}
 Extract all fields and respond with valid JSON matching the Rent Agreement schema.`;
   }
 
+  if (docType === "loan_sanction") {
+    return `You are an expert Indian banking & retail credit analyst. Extract structured information from the following loan sanction letter or Key Fact Statement (KFS).
+
+IMPORTANT RULES:
+1. Work from the masked text below — do NOT try to reconstruct any redacted PII.
+2. Extract "lender_name" (e.g. "State Bank of India", "HDFC Bank Ltd", "ICICI Bank").
+3. Determine "borrower_type": "individual" or "non_individual" (firm/company).
+4. Determine "loan_type": "home_loan", "personal_loan", "vehicle_loan", "business_loan", etc.
+5. Extract "sanctioned_amount" as a pure number in INR.
+6. Extract "interest_rate" (e.g. 8.75).
+7. Extract "interest_type": "fixed", "floating", or "hybrid". If benchmark/spread is mentioned (Repo rate + spread), it is "floating".
+8. Extract "benchmark_type" (e.g. "repo_rate", "mclr", "base_rate").
+9. Extract "spread_or_markup" (e.g. 2.25).
+10. Extract "tenor_months" (total loan tenure in months).
+11. Extract "monthly_emi" in INR.
+12. Extract "annual_percentage_rate" (APR) if explicitly stated in the Key Fact Statement table, else null.
+13. Set "is_kfs_present" to true if a standardized Key Fact Statement table is included.
+14. Extract "foreclosure_charge_pct" (prepayment / foreclosure penalty percentage). If stated as nil / zero, put 0.
+15. Extract "processing_fee" in INR.
+16. Extract "validity_days" (days before sanction expires).
+17. Set "has_cross_default_lien" to true if the agreement mentions banker's general lien, right of set-off, or cross-collateralization under Section 171 Contract Act.
+18. Set "severity": "high" if an individual floating loan levies foreclosure penalties, else "low" or "medium".
+
+Masked document text:
+---
+${text}
+---
+
+Extract all fields and respond with valid JSON matching the Loan Sanction schema.`;
+  }
+
+  if (docType === "gst_notice") {
+    return `You are an expert Indian GST & tax litigation analyst. Extract structured information from the following GST show cause notice or communication.
+
+IMPORTANT RULES:
+1. Work from the masked text below.
+2. Extract "form_type": "DRC-01", "DRC-01A", "DRC-07", or "other".
+3. Extract "notice_section": "73" (determination of tax not paid for reason other than fraud), "74" (fraud, willful misstatement, suppression of facts), or "74A".
+4. Extract "financial_year" or tax period (e.g. "2023-24").
+5. Extract "gstin" if present.
+6. Extract monetary values: "tax_demand", "interest_amount", "penalty_amount", and "total_demand" in INR.
+7. Extract "notice_date" (YYYY-MM-DD).
+8. Extract "response_deadline" (YYYY-MM-DD). If 30 days is stated from date of notice, compute the date.
+9. Compute "days_remaining" in IST until the response deadline.
+10. Check if a personal hearing is granted: set "has_personal_hearing" to true/false and extract "hearing_date" if stated.
+11. Extract "issuing_gst_office" (Range, Division, Commissionerate).
+12. Summarize "allegation_type" (e.g. "Input Tax Credit (ITC) mismatch GSTR-2B vs 3B", "Short payment of outward supplies in GSTR-1").
+13. Set "severity": "critical" if Section 74 (fraud), "high" if total demand > ₹1,00,000, else "medium".
+
+Masked document text:
+---
+${text}
+---
+
+Extract all fields and respond with valid JSON matching the GST Notice schema.`;
+  }
+
+  if (docType === "msme_contract") {
+    return `You are an expert Indian MSME and commercial contract analyst. Extract structured information from the following B2B invoice or supply contract.
+
+IMPORTANT RULES:
+1. Work from the masked text below.
+2. Extract "invoice_number" and "invoice_date" (YYYY-MM-DD).
+3. Extract "invoice_amount" in INR.
+4. Extract "supplier_name" and "buyer_name".
+5. Extract "supplier_udyam_number" (e.g. UDYAM-XX-00-0000000) if stated.
+6. Determine "enterprise_category": "micro", "small", "medium", or "unknown".
+7. Extract "agreed_credit_days" (stated payment term, e.g. 30, 45, 60, 90 days).
+8. Determine "has_written_agreement": true if part of an agreement/work order, false if plain purchase order/invoice.
+9. Extract "days_overdue" if the payment due date has elapsed.
+10. Determine "payment_status": "unpaid", "partially_paid", or "paid".
+11. Set "severity": "high" if credit days > 45 or bill is overdue, else "low".
+
+Masked document text:
+---
+${text}
+---
+
+Extract all fields and respond with valid JSON matching the MSME Invoice schema.`;
+  }
+
   if (docType === "statutory_form") {
     return `You are an expert Indian statutory & tax document analyst. Extract structured information from the following statutory form text (even if it is a blank or empty template).
 
@@ -149,10 +233,10 @@ IMPORTANT RULES:
 3. Set "notice_section_printed" to the section number printed (e.g. "35(2AA)").
 4. Set "notice_section_mapped" to any related section under the new 2025 Act or related tax code, or null.
 5. Set "is_blank_template" to true if the form has blank fields / empty tables / uncompleted rows, false if filled with actual assessee data.
-6. In "purpose", explain what this form is officially used for in Indian law (e.g. "Application by sponsors to obtain approval from the Prescribed Authority for scientific research programmes to claim weighted tax deduction under Section 35(2AA)").
-7. In "target_audience", state who submits it (e.g. "Assessees / Corporate sponsors funding scientific research at National Labs, IITs, or Universities").
-8. In "key_requirements", list 3-5 bullet points of required information or attachments (e.g. ["Details of the sponsor", "Title and objective of research programme", "Budget and timeline of expenditure", "Certification from National Laboratory / University"]).
-9. Set "issuing_authority" to the receiving or prescribed authority (e.g. "Prescribed Authority / DGIT Exemptions").
+6. In "purpose", explain what this form is officially used for in Indian law.
+7. In "target_audience", state who submits it.
+8. In "key_requirements", list 3-5 bullet points of required information or attachments.
+9. Set "issuing_authority" to the receiving or prescribed authority.
 10. Set "severity" to "low" (blank statutory forms carry zero tax liability).
 
 Masked document text:
@@ -209,12 +293,32 @@ export function getExplanationPrompt(
     docTypeGuidance = `This is an Income Tax notice. If both old (1961 Act) and new (2025 Act) section numbers are available, mention BOTH so the reader understands regardless of which Act they know.`;
   } else if (docType === "rent_agreement") {
     docTypeGuidance = `This is a Rent Agreement. Focus on tenant rights and obligations, financial commitments, and any clauses that may be unfavourable.`;
+  } else if (docType === "loan_sanction") {
+    docTypeGuidance = `This is a Bank / NBFC Loan Sanction Letter or Key Fact Statement (KFS).
+IMPORTANT:
+- Compare the headline interest rate with the Annual Percentage Rate (APR).
+- CRITICAL CHECK: If this is an individual borrower on a floating interest rate, check if the lender has illegally levied foreclosure or prepayment charges. Quote RBI Circular DBOD.No.Dir.BC.107/13.03.00/2011-12 which strictly bans prepayment penalties on floating loans to individuals.
+- Check for banker's general lien / right of set-off under Section 171 of the Contract Act.
+- Remind the borrower of their statutory right to have all original property title deeds returned and CERSAI charges cleared within 30 days of loan repayment, subject to ₹5,000 per day compensation from the bank for any delay.`;
+  } else if (docType === "gst_notice") {
+    docTypeGuidance = `This is a GST Show Cause Notice (Form GST DRC-01 / DRC-01A).
+IMPORTANT:
+- State whether it is issued under Section 73 (non-fraud, 10% penalty) or Section 74 (fraud / suppression of facts, 100% penalty).
+- Highlight the 30-day response window to file Form GST DRC-06.
+- Check whether the officer scheduled a mandatory personal hearing as required under Section 75(4) of the CGST Act.
+- Warn the taxpayer not to rely solely on the brief portal summary table, but to examine the full factual SCN Annexure before filing a reply.`;
+  } else if (docType === "msme_contract") {
+    docTypeGuidance = `This is an MSME B2B Supply Contract or Invoice governed by the MSMED Act 2006 and Income Tax Section 43B(h).
+IMPORTANT:
+- Check the credit period. Under Section 15 of the MSMED Act, payment terms cannot exceed 45 days (or 15 days without written agreement). Any contract clause allowing 60, 90, or 120 days is VOID.
+- Calculate statutory compound interest with monthly rests at 3× the RBI bank rate (19.5% p.a.) under Section 16 if overdue.
+- Alert the buyer regarding Section 43B(h) of the Income Tax Act: overdue MSME bills at financial year-end are completely disallowed as tax deductions, inflating their taxable profit.`;
   } else if (docType === "statutory_form") {
     docTypeGuidance = `This is an Indian Statutory Form or Template (e.g. Form No. 7 under Section 35(2AA), Form No. 1, etc.).
 IMPORTANT:
 - If this is a blank template, reassure the reader right away: "This is an UNFILLED STATUTORY TEMPLATE. It does NOT contain any tax demand, penalty, or adverse proceeding against you."
 - Explain clearly what the form is used for in Indian tax law, who needs to file it, and what key information or attachments are required to fill it.
-- Explain the statutory section context (e.g. Section 35(2AA) weighted deduction for scientific research).
+- Explain the statutory section context.
 - Provide practical next steps if they intend to complete or submit this form.`;
   } else {
     docTypeGuidance = `This is a general or non-assessment document (such as a utility bill, invoice, or certificate). Explain what it is in simple terms, note any financial amounts or dates mentioned, and clarify that it is outside tax notice or rent lease scope.`;

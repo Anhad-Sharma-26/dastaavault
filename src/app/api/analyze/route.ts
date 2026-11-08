@@ -25,6 +25,9 @@ import {
   itNoticeJsonSchema,
   rentAgreementJsonSchema,
   statutoryFormJsonSchema,
+  loanSanctionJsonSchema,
+  gstNoticeJsonSchema,
+  msmeInvoiceJsonSchema,
   generalDocJsonSchema,
 } from "@/lib/schemas";
 import {
@@ -37,6 +40,9 @@ import {
   verifyITNotice,
   verifyRentAgreement,
   verifyStatutoryForm,
+  verifyLoanSanction,
+  verifyGSTNotice,
+  verifyMSMEContract,
   verifyGeneralDoc,
 } from "@/lib/verification";
 import { getSectionMappingForPrompt } from "@/lib/section-mapping";
@@ -237,6 +243,14 @@ export async function POST(request: Request) {
               ? verifyITNotice(sim.extracted as any)
               : sim.doc_type === "rent_agreement"
               ? verifyRentAgreement(sim.extracted as any)
+              : sim.doc_type === "statutory_form"
+              ? verifyStatutoryForm(sim.extracted as any)
+              : sim.doc_type === "loan_sanction"
+              ? verifyLoanSanction(sim.extracted as any)
+              : sim.doc_type === "gst_notice"
+              ? verifyGSTNotice(sim.extracted as any)
+              : sim.doc_type === "msme_contract"
+              ? verifyMSMEContract(sim.extracted as any)
               : verifyGeneralDoc(sim.extracted as any);
 
           emit("verification", {
@@ -327,6 +341,12 @@ export async function POST(request: Request) {
             ? rentAgreementJsonSchema
             : docType === "statutory_form"
             ? statutoryFormJsonSchema
+            : docType === "loan_sanction"
+            ? loanSanctionJsonSchema
+            : docType === "gst_notice"
+            ? gstNoticeJsonSchema
+            : docType === "msme_contract"
+            ? msmeInvoiceJsonSchema
             : generalDocJsonSchema;
 
         const extraction = await callModelWithStructuredOutput(
@@ -359,6 +379,12 @@ export async function POST(request: Request) {
             ? verifyRentAgreement(extractedData)
             : docType === "statutory_form"
             ? verifyStatutoryForm(extractedData)
+            : docType === "loan_sanction"
+            ? verifyLoanSanction(extractedData)
+            : docType === "gst_notice"
+            ? verifyGSTNotice(extractedData)
+            : docType === "msme_contract"
+            ? verifyMSMEContract(extractedData)
             : verifyGeneralDoc(extractedData);
 
         emit("verification", {

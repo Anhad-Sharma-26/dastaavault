@@ -11,6 +11,9 @@ export type DocType =
   | "income_tax_notice"
   | "rent_agreement"
   | "statutory_form"
+  | "loan_sanction"
+  | "gst_notice"
+  | "msme_contract"
   | "unsupported";
 
 /** Risk severity levels (descending). */

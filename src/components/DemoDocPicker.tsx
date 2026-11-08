@@ -5,7 +5,7 @@ import React, { useState } from "react";
 export interface DemoDocItem {
   id: string;
   name: string;
-  category: "Tax notice" | "Rent agreement" | "Edge cases";
+  category: "Tax notice" | "Rent agreement" | "Banking & credit" | "Business & MSME" | "Edge cases";
   tag: string;
   highlight: string;
   fileName: string;
@@ -112,6 +112,34 @@ export const DEMO_DOCS: DemoDocItem[] = [
     fileName: "rent-high-escalation.html",
   },
 
+  // Banking & Credit Protection (Wave 1)
+  {
+    id: "bank-home-loan",
+    name: "Home Loan Sanction & KFS",
+    category: "Banking & credit",
+    tag: "RBI Floating Ban",
+    highlight: "Floating rate loan with unlawful 3% foreclosure fee and missing APR in KFS",
+    fileName: "banking-home-loan-sanction.html",
+  },
+
+  // Business & MSME Defense (Wave 2)
+  {
+    id: "gst-drc01",
+    name: "Form GST DRC-01 (Sec 74)",
+    category: "Business & MSME",
+    tag: "100% Penalty",
+    highlight: "Discrepancy notice with 100% fraud penalty and missing hearing schedule u/s 75(4)",
+    fileName: "gst-drc01-notice.html",
+  },
+  {
+    id: "msme-45day",
+    name: "MSME Commercial Invoice",
+    category: "Business & MSME",
+    tag: "45-Day Cap",
+    highlight: "90-day credit clause voided by Section 15 with 19.5% penal interest & 43B(h) risk",
+    fileName: "msme-overdue-invoice.html",
+  },
+
   // Edge Cases
   {
     id: "unrelated",
@@ -134,11 +162,13 @@ export function DemoDocPicker({
   selectedDocId,
   disabled,
 }: DemoDocPickerProps) {
-  const [activeTab, setActiveTab] = useState<"tax" | "rent" | "edge">("tax");
+  const [activeTab, setActiveTab] = useState<"tax" | "rent" | "banking" | "msme" | "edge">("tax");
 
   const filteredDocs = DEMO_DOCS.filter((d) => {
     if (activeTab === "tax") return d.category === "Tax notice";
     if (activeTab === "rent") return d.category === "Rent agreement";
+    if (activeTab === "banking") return d.category === "Banking & credit";
+    if (activeTab === "msme") return d.category === "Business & MSME";
     return d.category === "Edge cases";
   });
 
@@ -146,35 +176,57 @@ export function DemoDocPicker({
     <div className="space-y-3">
       {/* Segmented Category Tabs */}
       <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-[var(--color-rule)]">
-        <div className="flex items-center gap-1 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)]">
+        <div className="flex items-center gap-1 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)] flex-wrap">
           <button
             type="button"
             onClick={() => setActiveTab("tax")}
             className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
               activeTab === "tax"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
                 : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
             }`}
           >
-            Income tax notices (7)
+            Income tax (7)
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("rent")}
             className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
               activeTab === "rent"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
                 : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
             }`}
           >
-            Rent agreements (5)
+            Rent (5)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("banking")}
+            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+              activeTab === "banking"
+                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+            }`}
+          >
+            Banking &amp; Loans (1)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("msme")}
+            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+              activeTab === "msme"
+                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+            }`}
+          >
+            Business &amp; MSME (2)
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("edge")}
             className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
               activeTab === "edge"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
                 : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
             }`}
           >
@@ -183,7 +235,7 @@ export function DemoDocPicker({
         </div>
 
         <span className="text-[11px] font-mono text-[var(--color-muted)] hidden sm:inline">
-          Click any preset to load inspection preview
+          Click any preset to inspect instant ground-truth analysis
         </span>
       </div>
 

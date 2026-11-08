@@ -17,9 +17,18 @@ import {
   verifyRentAgreement,
   verifyStatutoryForm,
   verifyGeneralDoc,
+  verifyLoanSanction,
+  verifyGSTNotice,
+  verifyMSMEContract,
 } from "../src/lib/verification.ts";
 
 import { lookupSection } from "../src/lib/section-mapping.ts";
+import {
+  LoanSanctionSchema,
+  GSTNoticeSchema,
+  MSMEInvoiceSchema,
+} from "../src/lib/schemas.ts";
+import { DEMO_SIMULATIONS } from "../src/lib/demo-simulator.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -90,6 +99,90 @@ test("Section Mapping: cross-mapping new 220 to old 142(1)", () => {
   const res = lookupSection("220");
   assert.ok(res, "220 entry exists");
   assert.equal(res.old, "142(1)");
+});
+
+// ─── 2b. Wave 1 & 2 Schemas (Loan Sanction, GST Notice, MSME Invoice) ────────
+
+test("Schema Validation: LoanSanctionSchema parses valid loan data", () => {
+  const data = {
+    doc_type: "loan_sanction",
+    lender_name: "State Bank of India",
+    borrower_name: "Rahul Verma",
+    borrower_type: "individual",
+    loan_type: "home_loan",
+    sanctioned_amount: 4500000,
+    interest_rate: 8.4,
+    interest_type: "floating",
+    benchmark_type: "repo_rate",
+    spread_or_markup: 1.9,
+    tenor_months: 240,
+    monthly_emi: 38760,
+    annual_percentage_rate: 8.85,
+    is_kfs_present: true,
+    foreclosure_charge_pct: 0,
+    processing_fee: 10000,
+    validity_days: 90,
+    has_cross_default_lien: false,
+    severity: "low",
+    flags: [],
+    extraction_confidence: "high",
+    uncertain_fields: [],
+  };
+  const parsed = LoanSanctionSchema.parse(data);
+  assert.equal(parsed.lender_name, "State Bank of India");
+  assert.equal(parsed.interest_type, "floating");
+});
+
+test("Schema Validation: GSTNoticeSchema parses valid DRC-01 data", () => {
+  const data = {
+    doc_type: "gst_notice",
+    form_type: "DRC-01",
+    notice_section: "74",
+    financial_year: "2023-24",
+    gstin: "07AAAAA0000A1Z5",
+    tax_demand: 185000,
+    interest_amount: 32000,
+    penalty_amount: 185000,
+    total_demand: 402000,
+    notice_date: "2026-10-01",
+    response_deadline: "2026-10-31",
+    days_remaining: 10,
+    has_personal_hearing: false,
+    hearing_date: null,
+    issuing_gst_office: "Delhi North Ward 12",
+    allegation_type: "ITC mismatch GSTR-2B vs 3B",
+    severity: "critical",
+    flags: [],
+    extraction_confidence: "high",
+    uncertain_fields: [],
+  };
+  const parsed = GSTNoticeSchema.parse(data);
+  assert.equal(parsed.notice_section, "74");
+  assert.equal(parsed.total_demand, 402000);
+});
+
+test("Schema Validation: MSMEInvoiceSchema parses valid MSME invoice data", () => {
+  const data = {
+    doc_type: "msme_contract",
+    invoice_number: "INV/2026/042",
+    invoice_date: "2026-08-15",
+    invoice_amount: 325000,
+    supplier_name: "Apex Precision Tools",
+    supplier_udyam_number: "UDYAM-MH-01-0012345",
+    enterprise_category: "micro",
+    buyer_name: "Mega Corp India Ltd",
+    agreed_credit_days: 90,
+    has_written_agreement: true,
+    days_overdue: 45,
+    payment_status: "unpaid",
+    severity: "high",
+    flags: [],
+    extraction_confidence: "high",
+    uncertain_fields: [],
+  };
+  const parsed = MSMEInvoiceSchema.parse(data);
+  assert.equal(parsed.agreed_credit_days, 90);
+  assert.equal(parsed.enterprise_category, "micro");
 });
 
 // ─── 3. Verification Rules Tests (Testing real src/lib/verification.ts) ───────
@@ -206,6 +299,78 @@ test("Verification: General document flags informational summary", () => {
   assert.equal(res.severity, "low");
 });
 
+// ─── Wave 1 Verification Tests (Banking & Loan Sanctions) ────────────────────
+
+test("Verification: Loan sanction floating rate with foreclosure fee flags prohibited fee", () => {
+  const res = verifyLoanSanction({
+    doc_type: "loan_sanction",
+    lender_name: "HDFC Bank",
+    borrower_type: "individual",
+    interest_type: "floating",
+    interest_rate: 8.75,
+    foreclosure_charge_pct: 3.0,
+    is_kfs_present: true,
+    annual_percentage_rate: null, // missing APR
+    has_cross_default_lien: true,
+  });
+
+  const foreclosureFlag = res.flags.find((f) => f.flag_id === "prohibited_foreclosure_fee");
+  assert.ok(foreclosureFlag, "Should flag prohibited foreclosure fee on floating individual loan");
+  assert.equal(res.severity, "high");
+
+  const aprFlag = res.flags.find((f) => f.flag_id === "missing_apr_kfs_violation");
+  assert.ok(aprFlag, "Should flag missing APR under April 2024 KFS circular");
+
+  const lienFlag = res.flags.find((f) => f.flag_id === "cross_default_lien_trap");
+  assert.ok(lienFlag, "Should flag Section 171 banker general lien");
+
+  const returnRuleFlag = res.flags.find((f) => f.flag_id === "rbi_30_day_document_return_rule");
+  assert.ok(returnRuleFlag, "Should remind borrower of 30-day original document return right");
+});
+
+// ─── Wave 2 Verification Tests (GST Notices & MSME Invoices) ─────────────────
+
+test("Verification: GST notice under Section 74 flags critical fraud penalty and hearing omission", () => {
+  const res = verifyGSTNotice({
+    doc_type: "gst_notice",
+    notice_section: "74",
+    total_demand: 402000,
+    has_personal_hearing: false,
+    hearing_date: null,
+    days_remaining: 4,
+  });
+
+  const fraudFlag = res.flags.find((f) => f.flag_id === "high_penalty_fraud_allegation");
+  assert.ok(fraudFlag, "Section 74 notice must flag critical 100% fraud penalty");
+  assert.equal(res.severity, "critical");
+
+  const hearingFlag = res.flags.find((f) => f.flag_id === "procedural_hearing_omission");
+  assert.ok(hearingFlag, "Must flag missing personal hearing under Section 75(4)");
+
+  const deadlineFlag = res.flags.find((f) => f.flag_id === "urgent_gst_deadline");
+  assert.ok(deadlineFlag, "Must flag urgent response window under 5 days");
+});
+
+test("Verification: MSME invoice exceeding 45 days flags statutory cap override and Section 43B(h) risk", () => {
+  const res = verifyMSMEContract({
+    doc_type: "msme_contract",
+    agreed_credit_days: 90,
+    has_written_agreement: true,
+    days_overdue: 30,
+    payment_status: "unpaid",
+  });
+
+  const capFlag = res.flags.find((f) => f.flag_id === "msme_statutory_credit_cap_exceeded");
+  assert.ok(capFlag, "90-day term must flag Section 15 45-day statutory override");
+  assert.equal(res.severity, "high");
+
+  const interestFlag = res.flags.find((f) => f.flag_id === "msme_penal_interest_entitlement");
+  assert.ok(interestFlag, "Overdue bill must flag 3x RBI bank rate interest entitlement");
+
+  const taxFlag = res.flags.find((f) => f.flag_id === "section_43b_h_tax_disallowance_risk");
+  assert.ok(taxFlag, "Unpaid MSME bill must flag Section 43B(h) tax disallowance risk");
+});
+
 // ─── 4. Demo Documents Integrity Tests ──────────────────────────────────────
 
 const demoDocsDir = path.join(__dirname, "..", "public", "demo-docs");
@@ -223,13 +388,47 @@ const expectedDocs = [
   "rent-high-escalation.html",
   "blurry-photo.html",
   "unrelated-doc.html",
+  "banking-home-loan-sanction.html",
+  "gst-drc01-notice.html",
+  "msme-overdue-invoice.html",
 ];
 
-test("Demo Documents: all 13 synthetic test documents exist and have non-empty content", () => {
+test("Demo Documents: all 16 synthetic test documents exist and have non-empty content", () => {
   for (const docName of expectedDocs) {
     const fullPath = path.join(demoDocsDir, docName);
     assert.ok(fs.existsSync(fullPath), `Document ${docName} must exist`);
     const stat = fs.statSync(fullPath);
     assert.ok(stat.size > 200, `Document ${docName} must have realistic content`);
+  }
+});
+
+test("Demo Simulator: contains verified ground-truth simulations for all 16 preset documents", () => {
+  const requiredKeys = [
+    "it-143-1",
+    "it-new-act",
+    "it-large-demand",
+    "it-hindi",
+    "it-old-refund",
+    "it-148-photo",
+    "rent-clean",
+    "rent-lockin",
+    "rent-forfeiture",
+    "rent-12m",
+    "rent-high-esc",
+    "blurry",
+    "unrelated",
+    "bank-home-loan",
+    "gst-drc01",
+    "msme-45day",
+  ];
+
+  for (const key of requiredKeys) {
+    const sim = DEMO_SIMULATIONS[key];
+    assert.ok(sim, `Simulation for ${key} must exist`);
+    assert.ok(sim.transcription && sim.transcription.length > 20, `${key} must have transcription`);
+    assert.ok(sim.extracted && sim.extracted.doc_type, `${key} must have structured extraction`);
+    assert.ok(sim.explanation && sim.explanation.en, `${key} must have English explanation`);
+    assert.ok(sim.explanation.hi, `${key} must have Hindi explanation`);
+    assert.ok(sim.explanation.hinglish, `${key} must have Hinglish explanation`);
   }
 });

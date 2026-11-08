@@ -6,7 +6,7 @@
  */
 
 export interface SimulatedDocResult {
-  doc_type: "income_tax_notice" | "rent_agreement" | "unsupported";
+  doc_type: "income_tax_notice" | "rent_agreement" | "statutory_form" | "loan_sanction" | "gst_notice" | "msme_contract" | "unsupported";
   transcription: string;
   extracted: Record<string, any>;
   explanation: {
@@ -361,7 +361,7 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
   },
 
   // 10. IT 148 Reassessment
-  "it-148": {
+  "it-148-photo": {
     doc_type: "income_tax_notice",
     transcription: "INCOME TAX DEPARTMENT - MUMBAI\nNotice u/s 148 for Reassessment of Income Escaping Assessment\nPAN: BFGPS5678L | AY: 2023-24 | Date: 01-Sep-2026\nInformation suggests income from property sale escaped assessment.\nResponse required within 30 days.",
     extracted: {
@@ -398,7 +398,7 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
   },
 
   // 11. Old Act 1961 Notice with Refund
-  "it-old": {
+  "it-old-refund": {
     doc_type: "income_tax_notice",
     transcription: "INCOME TAX DEPARTMENT - CPC BENGALURU\nIntimation u/s 143(1) of the Income-tax Act, 1961\nPAN: GHIJK6789P | AY: 2022-23 | Date: 12/09/2022\nTotal Tax: ₹0 | TDS: ₹8,200 | Refund: ₹8,200 determined.",
     extracted: {
@@ -486,4 +486,111 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
       hinglish: "Yeh utility bill hai, Income Tax notice ya Rent Agreement nahi hai.",
     },
   },
+
+  // 14. Home Loan Sanction & KFS (Banking & Credit Protection)
+  "bank-home-loan": {
+    doc_type: "loan_sanction",
+    transcription:
+      "BHARAT NATIONAL HOUSING FINANCE LIMITED\nSANCTION LETTER & KEY FACT STATEMENT (KFS)\nSanction Ref: BNHF/HL/2026/84920 | Date: 12 January 2026\nBorrower: Vikram Aditya | Co-Borrower: Sunita Aditya\nSanctioned Principal: ₹45,00,000 | Tenor: 240 Months\nInterest Rate: Floating 8.75% p.a. | Monthly EMI: ₹39,780\nProcessing Fee: ₹15,000 + GST | APR: [Not disclosed in KFS]\nClause 14: Foreclosure penalty of 3.0% on outstanding principal.\nClause 19: Lender general lien under Section 171 over all accounts.",
+    extracted: {
+      doc_type: "loan_sanction",
+      lender_name: "Bharat National Housing Finance Ltd",
+      borrower_name: "Vikram Aditya",
+      sanction_date: "2026-01-12",
+      application_reference_no: "BNHF/HL/2026/84920",
+      loan_type: "home_loan",
+      sanctioned_amount: 4500000,
+      sanction_currency: "INR",
+      interest_type: "floating",
+      interest_rate_percent: 8.75,
+      benchmark_name: "Repo Linked Lending Rate (RLLR)",
+      spread_percent: 2.25,
+      annualized_percentage_rate: null,
+      tenure_months: 240,
+      emi_amount: 39780,
+      processing_fee: 15000,
+      foreclosure_fee_percent: 3.0,
+      has_general_lien_clause: true,
+      has_title_deed_clause: true,
+      severity: "critical",
+      extraction_confidence: "high",
+    },
+    explanation: {
+      en: "### ⚠️ Critical Regulatory Infraction Detected\n\nYour loan sanction letter from **Bharat National Housing Finance Ltd** contains an unlawful foreclosure penalty clause that directly violates RBI Master Directions.\n\n* **Prohibited Foreclosure Fee:** Clause 14 imposes a **3.0% prepayment penalty**. Under RBI Circular `DBOD.No.Dir.BC.107/13.03.00/2011-12` and subsequent circulars, banks and NBFCs/HFCs are **strictly prohibited** from levying any foreclosure charges on floating-rate term loans sanctioned to individual borrowers.\n* **Missing APR in Key Fact Statement:** Under RBI's April 2024 Harmonized KFS Master Direction, all retail loans must explicitly state the **Annualized Percentage Rate (APR)** including all processing fees and incidental charges. The APR column is omitted in this document.\n* **Banker's General Lien:** Clause 19 invokes Section 171 of the Contract Act, allowing the lender to freeze your other deposits or investments in case of dispute.\n* **Title Deed Protection:** Under RBI circular RBI/2023-24/60, the lender is legally required to release all original title documents within 30 days of loan closure, or pay ₹5,000 per day compensation.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or financial advice. Please consult a qualified professional before executing documents.",
+      hi: "### ⚠️ भारतीय रिज़र्व बैंक (RBI) के नियमों का उल्लंघन\n\nभारत नेशनल हाउसिंग फाइनेंस द्वारा जारी इस ऋण स्वीकृति पत्र में अवैध फोरक्लोज़र शुल्क लगाया गया है:\n\n* **अवैध फोरक्लोज़र पेनल्टी:** क्लॉज 14 में 3% प्रीपेमेंट चार्ज लगाया गया है। RBI के मास्टर सर्कुलर के अनुसार फ्लोटिंग-रेट व्यक्तिगत होम लोन पर कोई भी फोरक्लोज़र या प्रीपेमेंट पेनल्टी लगाना पूरी तरह प्रतिबंधित है।\n* **KFS में APR गायब:** अप्रैल 2024 के नए RBI KFS नियमों के तहत कुल वार्षिक प्रतिशत दर (APR) स्पष्ट रूप से दर्शानी अनिवार्य है, जो यहाँ नहीं है।\n* **दस्तावेज़ वापसी:** ऋण समाप्ति के 30 दिनों के भीतर मूल संपत्ति दस्तावेज़ वापस न करने पर बैंक को ₹5,000 प्रतिदिन का हर्जाना देना होगा।\n\n⚖️ यह केवल सूचनात्मक मार्गदर्शन है, विधिक या वित्तीय सलाह नहीं है।",
+      hinglish: "### ⚠️ Critical RBI Violation Found\n\nBharat National Housing Finance ke is loan sanction letter mein **unlawful foreclosure charge** lagaya gaya hai:\n\n* **Illegal Foreclosure Fee:** Clause 14 mein floating rate par **3.0% penalty** maangi gayi hai, jo RBI circular ke mutabiq individual borrowers par lagana bilkul prohibited hai.\n* **Missing APR in KFS:** RBI April 2024 circular ke mutabiq Key Fact Statement mein **APR (Annualized Percentage Rate)** disclose karna mandatory hai jo isme missing hai.\n* **30-Day Document Release:** Loan band hone ke 30 din mein original registry/documents na milne par ₹5,000/day compensation bank ko deni hogi.\n\n⚖️ Yeh summary educational guidance ke liye hai, formal legal advice nahi hai.",
+    },
+  },
+
+  // 15. GST DRC-01 Show Cause Notice (Business & MSME Defense)
+  "gst-drc01": {
+    doc_type: "gst_notice",
+    transcription:
+      "GOVERNMENT OF INDIA - STATE GST DEPARTMENT\nOFFICE OF ASSISTANT COMMISSIONER OF CENTRAL TAX, NEW DELHI\nFORM GST DRC-01 (Rule 142(1))\nSummary of Show Cause Notice issued under Section 74(1) of CGST Act 2017\nRef: ZD0702260194827 | Date: 15-Feb-2026 | FY: 2022-23\nGSTIN: 07AAAAA0000A1Z5 | Vistara Logistics & Freight Solutions Pvt Ltd\nAllegation: Excess ITC claimed in GSTR-3B vs GSTR-2B with willful suppression.\nTax Demand: CGST ₹92,500 + SGST ₹92,500 = ₹1,85,000\nPenalty u/s 74(1): ₹1,85,000 (100% of tax demanded)\nTotal Demand: ₹3,70,000 + statutory interest\nReply in Form GST DRC-06 within 30 days.\nDate of Personal Hearing: [Not Specified / Blank]",
+    extracted: {
+      doc_type: "gst_notice",
+      form_type: "DRC-01",
+      notice_reference_no: "ZD0702260194827",
+      issue_date: "2026-02-15",
+      financial_year: "2022-23",
+      gstin_masked: "07AA****A1Z5",
+      taxpayer_legal_name: "Vistara Logistics & Freight Solutions Pvt Ltd",
+      section: "74",
+      allegation_summary:
+        "Discrepancy between ITC claimed in GSTR-3B and GSTR-2B; alleged willful suppression of facts under Section 74(1).",
+      tax_amount: 185000,
+      interest_amount: null,
+      penalty_amount: 185000,
+      total_demand: 370000,
+      reply_deadline: "2026-03-17",
+      days_remaining: 18,
+      issuing_authority: "Assistant Commissioner of Central Tax, New Delhi",
+      personal_hearing_offered: false,
+      personal_hearing_date: null,
+      severity: "critical",
+      extraction_confidence: "high",
+    },
+    explanation: {
+      en: "### 🚨 Severe GST Show Cause Notice (Section 74)\n\nThis is a high-stakes GST Show Cause Notice issued under **Section 74 of the CGST Act, 2017**.\n\n* **Fraud Allegation (100% Penalty):** The department has invoked Section 74 alleging willful misstatement or suppression of facts rather than standard non-fraud (Section 73). Consequently, a maximum **100% penalty of ₹1,85,000** has been imposed on top of the ₹1,85,000 tax demand (Total: ₹3,70,000 + interest).\n* **Procedural Hearing Omission (Section 75(4)):** The personal hearing date is completely blank. Under **Section 75(4) of the CGST Act**, no adverse assessment order can be legally passed without granting the taxpayer an opportunity of a personal hearing. This procedural omission should be explicitly raised in your formal reply.\n* **Strict 30-Day Deadline:** You have until **17 March 2026** (18 days remaining in IST) to submit your factual rebuttal in Form GST DRC-06 via the GST Portal.\n\nAction required: Access the GST Portal's 'View Additional Notices and Orders' tab to obtain the detailed factual annexure. Consult a Chartered Accountant or GST Advocate immediately to contest the Section 74 fraud classification.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or tax advice.",
+      hi: "### 🚨 गंभीर जीएसटी कारण बताओ नोटिस (धारा 74)\n\nयह सीजीएसटी अधिनियम 2017 की **धारा 74** के तहत जारी गंभीर शो-कॉज नोटिस है:\n\n* **धोखाधड़ी/दमन का आरोप (100% जुर्माना):** विभाग ने धारा 73 (सामान्य त्रुटि) के बजाय धारा 74 लागू की है, जिसके चलते ₹1,85,000 के कर पर 100% जुर्माना (कुल ₹3,70,000 + ब्याज) प्रस्तावित किया गया है।\n* **व्यक्तिगत सुनवाई का अभाव (धारा 75(4)):** व्यक्तिगत सुनवाई की तारीख खाली है। धारा 75(4) के तहत बिना व्यक्तिगत सुनवाई के कोई भी प्रतिकूल आदेश पारित नहीं किया जा सकता।\n* **30 दिनों की समय-सीमा:** आपको 17 मार्च 2026 (18 दिन शेष) तक फॉर्म GST DRC-06 में अपना पक्ष रखना अनिवार्य है।\n\n⚖️ यह केवल सूचनात्मक मार्गदर्शन है, कानूनी सलाह नहीं।",
+      hinglish: "### 🚨 High Risk GST Notice u/s 74 Detected\n\nYeh Central GST Department ki taraf se **Section 74** ka Show Cause Notice (DRC-01) hai:\n\n* **100% Penalty u/s 74:** Tax officer ne willful suppression allege kiya hai, isliye ₹1,85,000 tax par **100% penalty (₹1,85,000)** demand ki gayi hai (Total: ₹3,70,000 + interest).\n* **Missing Personal Hearing:** Notice mein personal hearing ki date blank hai. Section 75(4) ke mutabiq adverse order se pehle hearing dena mandatory statutory requirement hai.\n* **Deadline:** 17 March 2026 tak Form GST DRC-06 file karna zaroori hai.\n\n⚖️ Yeh summary informational guidance ke liye hai, legal advice nahi hai.",
+    },
+  },
+
+  // 16. MSME Commercial Invoice & Contract (Business Defense)
+  "msme-45day": {
+    doc_type: "msme_contract",
+    transcription:
+      "KALPVRIKSHA PRECISION ENGINEERING PVT LTD\nUDYAM-MH-02-0048192 (Registered Micro Enterprise)\nTAX INVOICE / B2B COMMERCIAL CONTRACT\nInvoice No: KPE/25-26/1104 | Date: 05-Nov-2025\nBuyer: M/s Apex Heavy Infrastructure Conglomerate Ltd, Mumbai (GSTIN: 27AABCA5555C1Z1)\nDescription: Aerospace CNC Alloy Bushes & Titanium Brackets\nTaxable: ₹8,40,000 | CGST+SGST (18%): ₹1,51,200 | Total Invoice: ₹9,91,200\nPayment Terms: 90 days from receipt of goods.\nSupplier MSME Declaration: Micro Enterprise u/s 15/16 MSMED Act 2006.\nOverdue Days: 68 days overdue past 45-day statutory date.",
+    extracted: {
+      doc_type: "msme_contract",
+      invoice_number: "KPE/25-26/1104",
+      invoice_date: "2025-11-05",
+      supplier_name: "Kalpvriksha Precision Engineering Pvt Ltd",
+      supplier_enterprise_type: "micro",
+      supplier_udyam_number: "UDYAM-MH-02-0048192",
+      buyer_name: "Apex Heavy Infrastructure Conglomerate Ltd",
+      buyer_gstin: "27AABCA5555C1Z1",
+      buyer_is_corporate_or_firm: true,
+      total_amount: 991200,
+      tax_amount: 151200,
+      agreed_credit_days: 90,
+      statutory_max_credit_days: 45,
+      is_overdue: true,
+      days_overdue: 68,
+      penal_interest_rate_percent: 19.5,
+      penal_interest_amount: 36248,
+      section_43b_h_applicable: true,
+      severity: "high",
+      extraction_confidence: "high",
+    },
+    explanation: {
+      en: "### 🛡️ MSME Statutory Credit Shield Activated\n\nThis commercial invoice and contract is governed by the protective provisions of the **MSMED Act, 2006** and **Section 43B(h) of the Income-tax Act**.\n\n* **90-Day Credit Clause is Void:** The invoice agreement specifies a 90-day credit period. Under **Section 15 of the MSMED Act**, the maximum credit period is strictly capped at **45 days**. Any contractual agreement providing a longer period is legally void by virtue of Section 24.\n* **Compounded Penal Interest (19.5% p.a.):** The payment is currently **68 days overdue** beyond the 45-day statutory appointment day. Under **Section 16**, the buyer is legally obligated to pay compound interest with monthly rests at **three times the RBI Bank Rate (19.5% per annum)**, amounting to approx. **₹36,248 in penal interest**.\n* **Section 43B(h) Corporate Tax Risk:** Because the buyer (Apex Heavy Infrastructure) has failed to pay a registered Micro Enterprise within the statutory limit, this entire ₹9,91,200 purchase expense will be **disallowed from their income tax deductions** for this financial year, directly inflating their corporate tax liability.\n\nAction required: Issue an immediate formal demand letter quoting MSMED Sections 15 & 16 along with Section 43B(h). If unsettled, file a claim on the MSME Samadhaan portal.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or financial advice.",
+      hi: "### 🛡️ एमएसएमई वैधानिक सुरक्षा सक्रिय\n\nयह वाणिज्यिक चालान **MSMED अधिनियम 2006** और **आयकर धारा 43B(h)** के कड़े नियमों के अंतर्गत आता है:\n\n* **90 दिनों की शर्त शून्य (अमान्य):** अनुबंध में 90 दिनों की उधारी लिखी है, लेकिन धारा 15 के अनुसार अधिकतम सीमा **45 दिन** है। इससे अधिक की कोई भी शर्त कानूनन अमान्य है।\n* **चक्रवृद्धि दंडात्मक ब्याज (19.5%):** भुगतान नियत तिथि से **68 दिन अधिक लंबित** है। धारा 16 के तहत खरीदार को RBI बैंक दर के 3 गुना (19.5% प्रति वर्ष) की दर से मासिक चक्रवृद्धि ब्याज देना अनिवार्य है (लगभग ₹36,248)।\n* **धारा 43B(h) के तहत खरीदार पर कर जोखिम:** वित्तीय वर्ष में भुगतान न करने पर खरीदार को इस खर्च पर आयकर छूट नहीं मिलेगी, जिससे उनका कॉर्पोरेट टैक्स बढ़ जाएगा।\n\n⚖️ यह केवल सूचनात्मक सारांश है, कानूनी सलाह नहीं।",
+      hinglish: "### 🛡️ MSMED Act & Sec 43B(h) Protection\n\nYeh invoice MSME supplier ke favour mein strong statutory protections unlock karta hai:\n\n* **90-Day Term Void:** Agreement ka 90 din ka credit term Section 15 ke tehat illegal aur void hai, maximum limit **45 days** hi maani jaayegi.\n* **3x RBI Interest Rate:** Payment 68 days overdue ho chuka hai. Section 16 ke mutabiq buyer ko **19.5% p.a. compound interest** (monthly rests) dena padega.\n* **Section 43B(h) Disallowance:** Agar buyer FY end se pehle settle nahi karta toh unka pura ₹9.91L expense income tax mein disallow ho jaayegi.\n\n⚖️ Yeh guidance informational purposes ke liye hai, legal advice nahi hai.",
+    },
+  },
 };
+
+DEMO_SIMULATIONS['it-148'] = DEMO_SIMULATIONS['it-148-photo'];
+DEMO_SIMULATIONS['it-old'] = DEMO_SIMULATIONS['it-old-refund'];

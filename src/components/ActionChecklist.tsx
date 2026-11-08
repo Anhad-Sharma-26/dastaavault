@@ -38,6 +38,113 @@ export function ActionChecklist({
   };
 
   const getActionItems = (): ActionItem[] => {
+    if (docType === "loan_sanction") {
+      return [
+        {
+          id: "dispute-foreclosure",
+          text: "Issue a formal written objection refusing any foreclosure or prepayment fee on this floating-rate individual loan, quoting RBI Circular DBOD.No.Dir.BC.107/13.03.00/2011-12.",
+          urgency: "urgent",
+          linkText: "RBI Circular",
+          linkUrl: "https://www.rbi.org.in",
+        },
+        {
+          id: "demand-kfs-apr",
+          text: "Demand a compliant Key Fact Statement (KFS) that explicitly discloses the Annualized Percentage Rate (APR) and an exhaustive schedule of all fees before signing loan documents.",
+          urgency: "urgent",
+        },
+        {
+          id: "calendar-30day-title",
+          text: "Calendar a 30-day timeline upon final loan closure: the lender is legally required to release all original property title deeds within 30 days or pay ₹5,000/day statutory compensation.",
+          urgency: "recommended",
+        },
+        {
+          id: "restrict-lien-clause",
+          text: "Request modification or exclusion of any banker's general lien / right of set-off clause to isolate collateral exposure strictly to this mortgaged asset.",
+          urgency: "recommended",
+        },
+        {
+          id: "rbi-cms-complaint",
+          text: "If the lender refuses to remove unlawful foreclosure penalties, lodge an online complaint with the RBI Banking Ombudsman.",
+          urgency: "optional",
+          linkText: "RBI CMS Portal",
+          linkUrl: "https://cms.rbi.org.in",
+        },
+      ];
+    }
+
+    if (docType === "gst_notice") {
+      const isSec74 = sectionPrinted?.includes("74");
+      const items: ActionItem[] = [];
+
+      if (isSec74) {
+        items.push({
+          id: "contest-sec74-allegation",
+          text: "Critical Defense: Section 74 alleges fraud or suppression carrying a 100% penalty. Contest the invocation of fraud in writing; plead bona fide clerical error so the case is downgraded to Section 73 (10% penalty).",
+          urgency: "urgent",
+        });
+      }
+
+      items.push({
+        id: "demand-personal-hearing",
+        text: "Statutory Right: Formally request a Personal Hearing under Section 75(4) of the CGST Act before the Adjudicating Authority passes any adverse assessment order.",
+        urgency: "urgent",
+      });
+
+      items.push({
+        id: "download-scn-annexure",
+        text: "Download the complete factual Show Cause Notice annexure from the GST Portal ('View Additional Notices and Orders') rather than relying solely on the DRC-01 summary table.",
+        urgency: "urgent",
+        linkText: "GST Portal",
+        linkUrl: "https://services.gst.gov.in",
+      });
+
+      items.push({
+        id: "file-drc06-deadline",
+        text: `Draft and submit a comprehensive factual reply in Form GST DRC-06 before ${deadline || "the 30-day statutory deadline"} (${daysRemaining !== undefined && daysRemaining !== null ? `${daysRemaining} days remaining in IST` : "calendar immediately"}).`,
+        urgency: "urgent",
+      });
+
+      items.push({
+        id: "reconcile-gstr2b",
+        text: "Reconcile supplier GSTR-1 filings against GSTR-2B and purchase ledger to substantiate input tax credit (ITC) eligibility with e-way bills and tax invoices.",
+        urgency: "recommended",
+      });
+
+      return items;
+    }
+
+    if (docType === "msme_contract") {
+      return [
+        {
+          id: "enforce-45day-cap",
+          text: "Enforce Section 15 of the MSMED Act: inform the buyer that any contractual clause demanding 60, 90, or 120-day credit is void ab initio and capped at 45 days by statute.",
+          urgency: "urgent",
+        },
+        {
+          id: "claim-penal-interest",
+          text: "Calculate compound penal interest at 3x the RBI Bank Rate (currently 19.5% p.a. with monthly rests) for all overdue days beyond the 45-day statutory appointment day.",
+          urgency: "urgent",
+        },
+        {
+          id: "warn-sec43bh-buyer",
+          text: "Issue a formal written notice to buyer's finance head that unpaid balances to registered MSEs risk corporate tax expense disallowance under Section 43B(h) of the Income Tax Act.",
+          urgency: "urgent",
+        },
+        {
+          id: "file-msme-samadhaan",
+          text: "If payment remains unpaid past the statutory ceiling, file an online recovery application on the MSME Samadhaan delayed payment monitoring portal.",
+          urgency: "recommended",
+          linkText: "MSME Samadhaan",
+          linkUrl: "https://samadhaan.msme.gov.in",
+        },
+        {
+          id: "print-udyam-number",
+          text: "Verify that your 19-digit Udyam Registration Number is prominently printed on all future tax invoices and email correspondences.",
+          urgency: "optional",
+        },
+      ];
+    }
+
     if (docType === "income_tax_notice") {
       const items: ActionItem[] = [];
 
@@ -76,7 +183,7 @@ export function ActionChecklist({
       if (deadline) {
         items.push({
           id: "calendar-deadline",
-          text: `Submit response before ${deadline} (${daysRemaining !== undefined && daysRemaining !== null ? `${daysRemaining} days left` : "check notice"}).`,
+          text: `Submit response before ${deadline} (${daysRemaining !== undefined && daysRemaining !== null ? `${daysRemaining} days left in IST` : "check notice"}).`,
           urgency: "urgent",
         });
       }

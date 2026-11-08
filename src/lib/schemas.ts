@@ -261,12 +261,137 @@ export const GeneralDocSchema = z.object({
 
 export type GeneralDocData = z.infer<typeof GeneralDocSchema>;
 
+// ─── Loan Sanction Letter & Key Fact Statement (KFS) ─────────────────────────
+
+export const LoanSanctionSchema = z.object({
+  doc_type: z.literal("loan_sanction"),
+  lender_name: z.string().describe("Name of the lending bank, NBFC, or HFC"),
+  borrower_name: z.string().nullable().describe("Borrower name if visible"),
+  borrower_type: z
+    .enum(["individual", "non_individual"])
+    .default("individual")
+    .describe("Whether borrower is an individual or corporate/firm"),
+  loan_type: z
+    .enum([
+      "home_loan",
+      "personal_loan",
+      "vehicle_loan",
+      "business_loan",
+      "education_loan",
+      "loan_against_property",
+      "other",
+    ])
+    .default("home_loan"),
+  sanctioned_amount: z.number().nullable().describe("Total sanctioned loan amount in INR"),
+  interest_rate: z.number().nullable().describe("Annual interest rate percentage, e.g. 8.5"),
+  interest_type: z
+    .enum(["fixed", "floating", "hybrid"])
+    .default("floating")
+    .describe("Whether interest is fixed or floating"),
+  benchmark_type: z.string().nullable().describe("Benchmark, e.g. 'repo_rate', 'mclr', 'base_rate'"),
+  spread_or_markup: z.number().nullable().describe("Spread over benchmark percentage"),
+  tenor_months: z.number().nullable().describe("Total loan tenure in months"),
+  monthly_emi: z.number().nullable().describe("Monthly EMI installment in INR"),
+  annual_percentage_rate: z
+    .number()
+    .nullable()
+    .describe("Annual Percentage Rate (APR) from Key Fact Statement"),
+  is_kfs_present: z.boolean().default(false).describe("Whether Key Fact Statement table is present"),
+  foreclosure_charge_pct: z
+    .number()
+    .nullable()
+    .describe("Foreclosure or prepayment penalty percentage stated"),
+  processing_fee: z.number().nullable().describe("Processing or administrative fee in INR"),
+  validity_days: z.number().nullable().describe("Validity period of the sanction in days"),
+  has_cross_default_lien: z
+    .boolean()
+    .default(false)
+    .describe("Whether banker general lien / cross-default set-off clause is present"),
+  severity: z.enum(["critical", "high", "medium", "low"]).default("low"),
+  flags: z.array(FlagSchema).default([]),
+  extraction_confidence: z.enum(["high", "medium", "low"]).default("high"),
+  uncertain_fields: z.array(z.string()).default([]),
+});
+
+export type LoanSanctionData = z.infer<typeof LoanSanctionSchema>;
+
+// ─── GST Notice (Form GST DRC-01 / DRC-01A) ──────────────────────────────────
+
+export const GSTNoticeSchema = z.object({
+  doc_type: z.literal("gst_notice"),
+  form_type: z
+    .enum(["DRC-01", "DRC-01A", "DRC-07", "other"])
+    .default("DRC-01")
+    .describe("GST form type"),
+  notice_section: z
+    .enum(["73", "74", "74A", "unknown"])
+    .default("73")
+    .describe("Governing CGST/SGST section (73 = non-fraud, 74 = fraud/willful suppression)"),
+  financial_year: z.string().nullable().describe("Financial Year or Tax Period"),
+  gstin: z.string().nullable().describe("GSTIN of the taxpayer"),
+  tax_demand: z.number().nullable().describe("Tax amount demanded in INR"),
+  interest_amount: z.number().nullable().describe("Interest computed or demanded in INR"),
+  penalty_amount: z.number().nullable().describe("Penalty demanded in INR"),
+  total_demand: z.number().nullable().describe("Total demand payable in INR"),
+  notice_date: z.string().nullable().describe("Date of issue of notice (YYYY-MM-DD)"),
+  response_deadline: z.string().nullable().describe("Deadline to respond or file DRC-06 (YYYY-MM-DD)"),
+  days_remaining: z.number().nullable().describe("Days remaining in IST to respond"),
+  has_personal_hearing: z.boolean().default(false).describe("Whether personal hearing date/time is granted"),
+  hearing_date: z.string().nullable().describe("Date of personal hearing if specified"),
+  issuing_gst_office: z.string().nullable().describe("Issuing GST Ward / Range / Commissionerate"),
+  allegation_type: z
+    .string()
+    .describe(
+      "Nature of allegation (e.g. 'ITC mismatch GSTR-2B vs 3B', 'Short payment of outward tax', 'Non-reversal of ineligible credit')"
+    ),
+  severity: z.enum(["critical", "high", "medium", "low"]).default("medium"),
+  flags: z.array(FlagSchema).default([]),
+  extraction_confidence: z.enum(["high", "medium", "low"]).default("high"),
+  uncertain_fields: z.array(z.string()).default([]),
+});
+
+export type GSTNoticeData = z.infer<typeof GSTNoticeSchema>;
+
+// ─── MSME B2B Contract & Invoices (Section 15/16 MSMED + 43B(h)) ─────────────
+
+export const MSMEInvoiceSchema = z.object({
+  doc_type: z.literal("msme_contract"),
+  invoice_number: z.string().nullable().describe("Invoice or bill number"),
+  invoice_date: z.string().nullable().describe("Date of invoice (YYYY-MM-DD)"),
+  invoice_amount: z.number().nullable().describe("Total invoice amount in INR"),
+  supplier_name: z.string().nullable().describe("Supplier / vendor business name"),
+  supplier_udyam_number: z.string().nullable().describe("Udyam registration number of the supplier"),
+  enterprise_category: z
+    .enum(["micro", "small", "medium", "unknown"])
+    .default("micro")
+    .describe("Enterprise classification"),
+  buyer_name: z.string().nullable().describe("Buyer / customer company name"),
+  agreed_credit_days: z.number().nullable().describe("Agreed credit or payment window in days"),
+  has_written_agreement: z.boolean().default(true).describe("Whether a written agreement exists between parties"),
+  days_overdue: z.number().nullable().describe("Days elapsed beyond the statutory payment window"),
+  payment_status: z.enum(["unpaid", "partially_paid", "paid"]).default("unpaid"),
+  severity: z.enum(["critical", "high", "medium", "low"]).default("low"),
+  flags: z.array(FlagSchema).default([]),
+  extraction_confidence: z.enum(["high", "medium", "low"]).default("high"),
+  uncertain_fields: z.array(z.string()).default([]),
+});
+
+export type MSMEInvoiceData = z.infer<typeof MSMEInvoiceSchema>;
+
 // ─── Classification ──────────────────────────────────────────────────────────
 
 export const ClassificationSchema = z.object({
   doc_type: z
-    .enum(["income_tax_notice", "rent_agreement", "statutory_form", "unsupported"])
-    .describe("Detected document type. Use 'statutory_form' for blank or filled statutory tax forms, applications, or rule templates like Form 7, Form 1, Form 10, Form 16 blank, Form 26AS, etc."),
+    .enum([
+      "income_tax_notice",
+      "rent_agreement",
+      "statutory_form",
+      "loan_sanction",
+      "gst_notice",
+      "msme_contract",
+      "unsupported",
+    ])
+    .describe("Detected document type across Tax, Property, Banking, and MSME domains"),
   is_empty_or_template: z
     .boolean()
     .default(false)
@@ -306,6 +431,21 @@ export const StatutoryFormJSONSchema = toJSONSchema(StatutoryFormSchema, {
   target: "draft-2020-12",
 });
 
+/** JSON Schema representation of the Loan Sanction extraction schema. */
+export const LoanSanctionJSONSchema = toJSONSchema(LoanSanctionSchema, {
+  target: "draft-2020-12",
+});
+
+/** JSON Schema representation of the GST Notice extraction schema. */
+export const GSTNoticeJSONSchema = toJSONSchema(GSTNoticeSchema, {
+  target: "draft-2020-12",
+});
+
+/** JSON Schema representation of the MSME Invoice extraction schema. */
+export const MSMEInvoiceJSONSchema = toJSONSchema(MSMEInvoiceSchema, {
+  target: "draft-2020-12",
+});
+
 /** JSON Schema representation of the General Document extraction schema. */
 export const GeneralDocJSONSchema = toJSONSchema(GeneralDocSchema, {
   target: "draft-2020-12",
@@ -322,11 +462,17 @@ export {
   IncomeTaxNoticeJSONSchema as itNoticeJsonSchema,
   RentAgreementJSONSchema as rentAgreementJsonSchema,
   StatutoryFormJSONSchema as statutoryFormJsonSchema,
+  LoanSanctionJSONSchema as loanSanctionJsonSchema,
+  GSTNoticeJSONSchema as gstNoticeJsonSchema,
+  MSMEInvoiceJSONSchema as msmeInvoiceJsonSchema,
   GeneralDocJSONSchema as generalDocJsonSchema,
 };
 
 export type IncomeTaxNotice = IncomeTaxNoticeData;
 export type RentAgreement = RentAgreementData;
 export type StatutoryForm = StatutoryFormData;
+export type LoanSanction = LoanSanctionData;
+export type GSTNotice = GSTNoticeData;
+export type MSMEInvoice = MSMEInvoiceData;
 export type GeneralDoc = GeneralDocData;
 export type Classification = ClassificationData;

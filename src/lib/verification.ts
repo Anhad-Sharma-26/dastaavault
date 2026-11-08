@@ -390,3 +390,252 @@ export function verifyGeneralDoc(docData: Record<string, any>): VerificationResu
 
   return { flags, severity: "low" };
 }
+
+// ─── Banking: Loan Sanction & Key Fact Statement (KFS) Verification ───────────
+
+/**
+ * Run deterministic verification checks on a Loan Sanction Letter or KFS.
+ *
+ * @param loan - Extracted loan details.
+ * @returns Verification result with flags and risk severity.
+ */
+export function verifyLoanSanction(loan: Record<string, any>): VerificationResult {
+  const flags: Flag[] = [];
+  let severity: Severity = loan.severity ?? "low";
+
+  // Normalize aliases
+  const foreclosurePct = loan.foreclosure_charge_pct ?? loan.foreclosure_fee_percent;
+  const isKfs = loan.is_kfs_present ?? (loan.annual_percentage_rate !== undefined || loan.annualized_percentage_rate !== undefined);
+  const apr = loan.annual_percentage_rate !== undefined ? loan.annual_percentage_rate : loan.annualized_percentage_rate;
+  const interestRate = loan.interest_rate ?? loan.interest_rate_percent;
+  const lien = loan.has_cross_default_lien ?? loan.has_general_lien_clause;
+
+  // 1. Prohibited Foreclosure / Prepayment Penalty (RBI Circular DBOD.No.Dir.BC.107/13.03.00/2011-12)
+  const isIndividual = loan.borrower_type !== "non_individual";
+  const isFloating = loan.interest_type === "floating" || !loan.interest_type;
+
+  if (isIndividual && isFloating && foreclosurePct && foreclosurePct > 0) {
+    flags.push(
+      flag(
+        "prohibited_foreclosure_fee",
+        "warning",
+        "Prohibited foreclosure fee detected",
+        `Agreement specifies a ${foreclosurePct}% foreclosure/prepayment charge. Under binding RBI Master Directions (DBOD.No.Dir.BC.107/2011-12), lenders are STRICTLY FORBIDDEN from levying foreclosure or prepayment penalties on floating-rate loans to individual borrowers.`
+      )
+    );
+    severity = promoteSeverity(severity, "high");
+  }
+
+  // 2. Mandatory APR Disclosure in KFS (RBI Circular DOR.STR.REC.12/21.04.048/2024-25)
+  if (isKfs && (apr === null || apr === undefined)) {
+    flags.push(
+      flag(
+        "missing_apr_kfs_violation",
+        "warning",
+        "Mandatory APR missing from Key Fact Statement",
+        "RBI's April 2024 Harmonized KFS directions mandate explicit disclosure of the Annual Percentage Rate (APR), which accounts for all interest, processing fees, and documentation costs. Any unlisted charge cannot be legally collected."
+      )
+    );
+    severity = promoteSeverity(severity, "medium");
+  } else if (apr && interestRate && apr > interestRate) {
+    const diff = (apr - interestRate).toFixed(2);
+    flags.push(
+      flag(
+        "apr_spread_cost",
+        "info",
+        `True APR is ${apr}% (+${diff}% effective spread)`,
+        `While the headline interest rate is ${interestRate}%, your actual Annual Percentage Rate factoring in processing and bundled fees is ${apr}%.`
+      )
+    );
+  }
+
+  // 3. Banker's General Lien & Account Set-Off (Section 171 Indian Contract Act 1872)
+  if (lien) {
+    flags.push(
+      flag(
+        "cross_default_lien_trap",
+        "warning",
+        "Banker's general lien & set-off clause detected",
+        "Under Section 171 of the Indian Contract Act, the lender retains a right to freeze or debit funds from your other accounts (savings, fixed deposits) with the same institution in the event of any disputed default."
+      )
+    );
+    severity = promoteSeverity(severity, "medium");
+  }
+
+  // 4. Statutory 30-Day Collateral Return & ₹5,000/day compensation (RBI Circular DoR.MCS.REC.38/2023-24)
+  flags.push(
+    flag(
+      "rbi_30_day_document_return_rule",
+      "info",
+      "Statutory 30-day original document return right",
+      "Upon full repayment of this loan, the lender is legally required to return all original title deeds and release CERSAI charges within 30 calendar days. Any delay attributable to the lender entitles you to compensation of ₹5,000 for each day of delay."
+    )
+  );
+
+  return { flags, severity };
+}
+
+// ─── Business: GST Show Cause Notice (Form GST DRC-01) Verification ───────────
+
+/**
+ * Run deterministic verification checks on a GST Notice (DRC-01 / DRC-01A).
+ *
+ * @param notice - Extracted GST notice details.
+ * @returns Verification result with flags and risk severity.
+ */
+export function verifyGSTNotice(notice: Record<string, any>): VerificationResult {
+  const flags: Flag[] = [];
+  let severity: Severity = notice.severity ?? "medium";
+
+  // Normalize aliases
+  const section = notice.notice_section ?? notice.section;
+  const hasHearing = Boolean(notice.has_personal_hearing || notice.personal_hearing_offered);
+  const hearingDate = notice.hearing_date ?? notice.personal_hearing_date;
+
+  // 1. Section 74 Fraud / Willful Suppression vs Section 73 Non-Fraud
+  if (section === "74") {
+    flags.push(
+      flag(
+        "high_penalty_fraud_allegation",
+        "warning",
+        "Issued u/s 74 (Allegation of fraud / willful suppression)",
+        "Section 74 notices carry a mandatory 100% penalty on the tax amount demanded, unlike Section 73 which caps penalties at 10%. Immediate professional representation by a GST practitioner or Advocate is strongly advised."
+      )
+    );
+    severity = promoteSeverity(severity, "critical");
+  } else {
+    flags.push(
+      flag(
+        "section_73_regular_demand",
+        "info",
+        "Issued u/s 73 (Non-fraud determination)",
+        "Determination of tax short paid or ITC wrongly availed for reasons other than fraud or willful misstatement. Maximum penalty is typically 10% of tax demanded."
+      )
+    );
+  }
+
+  // 2. Mandatory Personal Hearing Check (Section 75(4) CGST Act 2017)
+  if (!hasHearing && !hearingDate) {
+    flags.push(
+      flag(
+        "procedural_hearing_omission",
+        "warning",
+        "No personal hearing scheduled (Section 75(4) violation)",
+        "Under Section 75(4) of the CGST Act, an adverse demand order cannot be passed without granting an opportunity of a personal hearing. Failure by the department to schedule a hearing makes subsequent orders procedurally vulnerable in High Courts."
+      )
+    );
+    severity = promoteSeverity(severity, "medium");
+  } else if (hearingDate) {
+    flags.push(
+      flag(
+        "personal_hearing_scheduled",
+        "info",
+        `Personal hearing scheduled on ${hearingDate}`,
+        "Attend or file a written submission in Form GST DRC-06 prior to this date."
+      )
+    );
+  }
+
+  // 3. Response Deadline & Countdown
+  if (notice.days_remaining !== null && notice.days_remaining !== undefined) {
+    if (notice.days_remaining <= 5 && notice.days_remaining >= 0) {
+      flags.push(
+        flag(
+          "urgent_gst_deadline",
+          "warning",
+          "GST response deadline is imminent",
+          `Only ${notice.days_remaining} day(s) remaining to file reply in Form GST DRC-06 before an adverse order in Form GST DRC-07 is issued.`
+        )
+      );
+      severity = promoteSeverity(severity, "critical");
+    } else if (notice.days_remaining < 0) {
+      flags.push(
+        flag(
+          "gst_deadline_passed",
+          "warning",
+          "GST response window has elapsed",
+          `The 30-day response window expired ${Math.abs(notice.days_remaining)} day(s) ago. Check portal immediately for Form GST DRC-07 demand order.`
+        )
+      );
+      severity = promoteSeverity(severity, "critical");
+    } else {
+      flags.push(
+        flag(
+          "gst_response_window",
+          "info",
+          "30-day statutory response window",
+          `You have ${notice.days_remaining} days remaining to submit your reply in Form GST DRC-06.`
+        )
+      );
+    }
+  }
+
+  // 4. Portal Summary vs Detailed SCN Annexure Trap
+  flags.push(
+    flag(
+      "drc01_summary_trap",
+      "info",
+      "Crucial: Request detailed factual SCN Annexure",
+      "Form GST DRC-01 on the portal is merely an automated electronic summary. Ensure your legal reply addresses the full factual Show Cause Notice and reconciliation tables attached as PDF annexures."
+    )
+  );
+
+  return { flags, severity };
+}
+
+// ─── Business: MSME Invoice & Contract Verification ───────────────────────────
+
+/**
+ * Run deterministic verification checks on an MSME B2B Contract / Invoice.
+ *
+ * @param invoice - Extracted invoice details.
+ * @returns Verification result with flags and risk severity.
+ */
+export function verifyMSMEContract(invoice: Record<string, any>): VerificationResult {
+  const flags: Flag[] = [];
+  let severity: Severity = invoice.severity ?? "low";
+
+  // 1. Section 15 MSMED Act 45-Day Statutory Override
+  const maxAllowed = invoice.has_written_agreement !== false ? 45 : 15;
+  if (invoice.agreed_credit_days && invoice.agreed_credit_days > maxAllowed) {
+    flags.push(
+      flag(
+        "msme_statutory_credit_cap_exceeded",
+        "warning",
+        `Credit period overrides contract (Capped to ${maxAllowed} days)`,
+        `Your agreement/invoice states ${invoice.agreed_credit_days} credit days. Under Section 15 of the MSMED Act 2006, payment terms to Micro and Small enterprises cannot exceed ${maxAllowed} days under any circumstance. Any contractual clause exceeding this limit is void ab initio.`
+      )
+    );
+    severity = promoteSeverity(severity, "high");
+  }
+
+  // 2. Section 16 Penal Compound Interest @ 3x RBI Bank Rate
+  if (invoice.days_overdue && invoice.days_overdue > 0) {
+    const rbiRate = 6.5; // current RBI bank rate
+    const penalRate = (rbiRate * 3).toFixed(1); // 19.5%
+    flags.push(
+      flag(
+        "msme_penal_interest_entitlement",
+        "info",
+        `Compound penal interest @ ${penalRate}% p.a. due`,
+        `Under Section 16 of the MSMED Act, the buyer is legally obligated to pay compound interest with monthly rests at 3× the RBI bank rate (${penalRate}% p.a.) for ${invoice.days_overdue} overdue days. This interest cannot be claimed as a tax deduction by the buyer under Section 23.`
+      )
+    );
+    severity = promoteSeverity(severity, "high");
+  }
+
+  // 3. Income Tax Section 43B(h) Disallowance Risk
+  if (invoice.payment_status === "unpaid" || (invoice.days_overdue && invoice.days_overdue > 0)) {
+    flags.push(
+      flag(
+        "section_43b_h_tax_disallowance_risk",
+        "warning",
+        "Section 43B(h) Income Tax expense disallowance alert",
+        "Under Section 43B(h) of the Income Tax Act (effective AY 2024-25), if a buyer fails to clear an MSE vendor bill within statutory timelines, the expense is completely DISALLOWED from the buyer's tax deductions at financial year-end, directly increasing their taxable income."
+      )
+    );
+    severity = promoteSeverity(severity, "high");
+  }
+
+  return { flags, severity };
+}

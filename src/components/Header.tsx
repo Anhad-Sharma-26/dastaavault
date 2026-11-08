@@ -21,7 +21,7 @@ export function Header() {
               </span>
             </div>
             <p className="text-[11px] text-[var(--color-muted)]">
-              भारतीय दस्तावेज़ समीक्षक: Income Tax 1961/2025 and Rent Contracts
+              भारतीय दस्तावेज़ समीक्षक: Income Tax, GST, Banking KFS, MSME &amp; Rent Contracts
             </p>
           </div>
         </div>
