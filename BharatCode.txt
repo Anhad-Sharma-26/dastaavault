@@ -1,10 +1,35 @@
-DastaaVault — Your Document, Decoded
+DastaaVault — Indian Document Reviewer & Statutory Risk Analyzer
+भारतीय दस्तावेज़ समीक्षक
 
-Built for the BharatCode Build League hackathon.
+Built for the BharatCode Build League 2026 Hackathon.
+Powered by BharatCode Model API (qwen-3.8-27b).
 
-Uses the BharatCode API (qwen-3.8-27b) to analyze Indian income tax notices
-and rent agreements. Extracts structured data, flags risks, computes deadlines,
-and explains everything in plain English, Hindi, or Hinglish.
+DastaaVault is a zero-cloud-storage, deterministic statutory intelligence
+platform designed to protect Indian citizens, MSMEs, borrowers, homebuyers,
+and policyholders from hidden contractual traps and regulatory penalties.
 
-Nothing is stored. PII is masked before any model call.
-This is not legal advice.
+Covered Statutory Domains (6 Packs):
+1. Income Tax Notices: 1961 Act ↔ 2025 Act concordance, TDS mismatches,
+   Section 148 reassessment risks, and unfilled statutory templates.
+2. Rent Agreements: Lock-in traps, security deposit forfeiture, and
+   Registration Act Section 17 12-month lease thresholds.
+3. Banking & Credit (Wave 1): RBI floating loan foreclosure fee bans,
+   mandatory Key Fact Statement (KFS) APR disclosures, and title return rules.
+4. Business & MSME Defense (Wave 2): CGST Act Section 74 vs 73 fraud SCNs,
+   Section 75(4) mandatory hearings, MSMED Section 15 45-day credit ceilings,
+   and Section 43B(h) buyer corporate tax disallowance risks.
+5. Real Estate & Property (Wave 3): Supreme Court Suraj Lamp (2011) GPA ban,
+   RERA Section 18 / Rule 15 penalty parity, and Section 2(k) carpet area rules.
+6. Health Insurance (Wave 3): 1% daily room rent proportionate deduction
+   haircut math, and Section 45 Insurance Act 3-year moratorium protections.
+
+Privacy Guarantee:
+- Client-side PII masking (PAN, Aadhaar, Phone, Email) before transmission.
+- Zero server database or document storage. Files exist only in volatile memory.
+- Multilingual explanations in English, हिंदी, and Hinglish.
+- 18 verified one-click test presets with a 37-test automated verification suite.
+
+Repository: https://github.com/Anhad-Sharma-26/dastaavault
+License: MIT
+Author: Anhad Sharma (@Anhad-Sharma-26)
+This application does not provide legal or financial advice.
