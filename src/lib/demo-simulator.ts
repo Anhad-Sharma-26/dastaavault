@@ -1,3 +1,4 @@
+import type { DocType } from "@/lib/types";
 /**
  * @module demo-simulator
  * @description Provides verified, grounded analysis simulations for all 13 demo documents.
@@ -6,7 +7,7 @@
  */
 
 export interface SimulatedDocResult {
-  doc_type: "income_tax_notice" | "rent_agreement" | "statutory_form" | "loan_sanction" | "gst_notice" | "msme_contract" | "unsupported";
+  doc_type: DocType;
   transcription: string;
   extracted: Record<string, any>;
   explanation: {
@@ -588,6 +589,74 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
       en: "### 🛡️ MSME Statutory Credit Shield Activated\n\nThis commercial invoice and contract is governed by the protective provisions of the **MSMED Act, 2006** and **Section 43B(h) of the Income-tax Act**.\n\n* **90-Day Credit Clause is Void:** The invoice agreement specifies a 90-day credit period. Under **Section 15 of the MSMED Act**, the maximum credit period is strictly capped at **45 days**. Any contractual agreement providing a longer period is legally void by virtue of Section 24.\n* **Compounded Penal Interest (19.5% p.a.):** The payment is currently **68 days overdue** beyond the 45-day statutory appointment day. Under **Section 16**, the buyer is legally obligated to pay compound interest with monthly rests at **three times the RBI Bank Rate (19.5% per annum)**, amounting to approx. **₹36,248 in penal interest**.\n* **Section 43B(h) Corporate Tax Risk:** Because the buyer (Apex Heavy Infrastructure) has failed to pay a registered Micro Enterprise within the statutory limit, this entire ₹9,91,200 purchase expense will be **disallowed from their income tax deductions** for this financial year, directly inflating their corporate tax liability.\n\nAction required: Issue an immediate formal demand letter quoting MSMED Sections 15 & 16 along with Section 43B(h). If unsettled, file a claim on the MSME Samadhaan portal.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or financial advice.",
       hi: "### 🛡️ एमएसएमई वैधानिक सुरक्षा सक्रिय\n\nयह वाणिज्यिक चालान **MSMED अधिनियम 2006** और **आयकर धारा 43B(h)** के कड़े नियमों के अंतर्गत आता है:\n\n* **90 दिनों की शर्त शून्य (अमान्य):** अनुबंध में 90 दिनों की उधारी लिखी है, लेकिन धारा 15 के अनुसार अधिकतम सीमा **45 दिन** है। इससे अधिक की कोई भी शर्त कानूनन अमान्य है।\n* **चक्रवृद्धि दंडात्मक ब्याज (19.5%):** भुगतान नियत तिथि से **68 दिन अधिक लंबित** है। धारा 16 के तहत खरीदार को RBI बैंक दर के 3 गुना (19.5% प्रति वर्ष) की दर से मासिक चक्रवृद्धि ब्याज देना अनिवार्य है (लगभग ₹36,248)।\n* **धारा 43B(h) के तहत खरीदार पर कर जोखिम:** वित्तीय वर्ष में भुगतान न करने पर खरीदार को इस खर्च पर आयकर छूट नहीं मिलेगी, जिससे उनका कॉर्पोरेट टैक्स बढ़ जाएगा।\n\n⚖️ यह केवल सूचनात्मक सारांश है, कानूनी सलाह नहीं।",
       hinglish: "### 🛡️ MSMED Act & Sec 43B(h) Protection\n\nYeh invoice MSME supplier ke favour mein strong statutory protections unlock karta hai:\n\n* **90-Day Term Void:** Agreement ka 90 din ka credit term Section 15 ke tehat illegal aur void hai, maximum limit **45 days** hi maani jaayegi.\n* **3x RBI Interest Rate:** Payment 68 days overdue ho chuka hai. Section 16 ke mutabiq buyer ko **19.5% p.a. compound interest** (monthly rests) dena padega.\n* **Section 43B(h) Disallowance:** Agar buyer FY end se pehle settle nahi karta toh unka pura ₹9.91L expense income tax mein disallow ho jaayegi.\n\n⚖️ Yeh guidance informational purposes ke liye hai, legal advice nahi hai.",
+    },
+  },
+
+  // 17. Builder-Buyer Agreement (Wave 3 — RERA & Real Estate)
+  "property-bba": {
+    doc_type: "property_contract",
+    transcription:
+      "AGREEMENT FOR SALE & ALLOTMENT (BUILDER-BUYER AGREEMENT)\nProject: Horizon Skywalk Towers | RERA: HRERA-GGM-2023-892\nPromoter: Apex Horizon Developers LLP | Allottee: Rajesh Kumar Sharma & Sunita Sharma\nUnit: Tower B, B-1402, 14th Floor, Sector 84, Gurugram, Haryana\nSuper Built-Up Area: 1,850 sq.ft. (Carpet area not stated in agreement)\nConsideration: ₹1,45,00,000 | Advance Paid: ₹15,00,000\nPossession Date: 31 December 2026\nClause 14.1: Buyer delay interest at 18.0% per annum compounded monthly.\nClause 14.2: Promoter delay compensation at Rs. 5/- per sq.ft. per month.\nClause 21: Super area loading 35% with variance up to 10%.\nClause 23: Promoter may transfer title via General Power of Attorney (GPA), Agreement to Sell and Will.\nClause 27: Tripartite subvention agreement with lender; Allottee indemnifies Developer against bank default.",
+    extracted: {
+      doc_type: "property_contract",
+      property_name: "Horizon Skywalk Towers",
+      unit_number: "Unit B-1402, 14th Floor",
+      builder_promoter_name: "Apex Horizon Developers LLP",
+      buyer_allottee_name: "Rajesh Kumar Sharma & Sunita Sharma",
+      rera_registration_number: "HRERA-GGM-2023-892",
+      agreement_date: "2024-03-15",
+      possession_date: "2026-12-31",
+      total_consideration: 14500000,
+      advance_amount_paid: 1500000,
+      super_built_up_area_sqft: 1850,
+      carpet_area_sqft: null,
+      loading_factor_percent: 35.0,
+      buyer_delay_interest_rate_percent: 18.0,
+      builder_delay_compensation: "Rs. 5 per sq.ft. per month",
+      penalty_is_asymmetric: true,
+      mentions_gpa_or_power_of_attorney: true,
+      has_tripartite_subvention_clause: true,
+      severity: "critical",
+      extraction_confidence: "high",
+    },
+    explanation: {
+      en: "### 🚨 High Risk Real Estate Contract Flags\n\nThis Builder-Buyer Agreement contains severe statutory violations under **RERA 2016** and the landmark Supreme Court ruling in **Suraj Lamp (2011)**:\n\n* **Prohibited GPA Title Conveyance (Suraj Lamp Ban):** Clause 23 purports to convey title or possessory rights via General Power of Attorney (GPA), Agreement to Sell, and Will. The Supreme Court in *Suraj Lamp & Industries (P) Ltd v. State of Haryana (2011 11 SCC 787)* held unequivocally that immovable property can ONLY be transferred through a registered Sale Deed under Section 54 of the Transfer of Property Act and Section 17 of the Registration Act. GPA sales transfer no title.\n* **RERA Penalty Parity Violation (Sec 18 / Rule 15):** Clause 14 imposes an usurious **18.0% p.a.** delay interest on the buyer, while offering a trivial **Rs. 5/- per sq.ft. per month** (approx 0.6% p.a.) if the builder delays possession. Under RERA Section 18 and Haryana RERA Rule 15, the rate of interest payable by the promoter for delivery delays **MUST EQUAL** the rate charged to the allottee for installment delays (mandated at SBI Highest MCLR + 2%).\n* **Missing Carpet Area Disclosure:** The contract quotes a 'Super Built-Up Area' of 1,850 sq.ft. with an unverified 35% loading factor, omitting net usable Carpet Area as mandated under RERA Section 2(k).\n* **Tripartite Subvention Indemnity Trap:** Clause 27 forces the buyer to indemnify the promoter against bank default in subvention schemes, leaving the buyer solely exposed to bank recovery even if construction stalls.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal advice. Consult a RERA advocate before signing or disbursing funds.",
+      hi: "### 🚨 रियल एस्टेट अनुबंध में गंभीर विधिक त्रुटियां\n\nइस बिल्डर-बायर समझौते में **RERA 2016** और सुप्रीम कोर्ट के ऐतिहासिक **सूरज लैंप (2011)** निर्णय का खुला उल्लंघन है:\n\n* **GPA पर मालिकाना हक का अभाव (सूरज लैंप निर्णय):** क्लॉज 23 में जीपीए (GPA) और वसीयत के जरिए संपत्ति ट्रांसफर की बात कही गई है। सुप्रीम कोर्ट (2011) के अनुसार अचल संपत्ति का कानूनी स्वामित्व केवल पंजीकृत सेल डीड (Sale Deed) से ही मिल सकता है, GPA से नहीं।\n* **पेनल्टी में पक्षपात (RERA धारा 18):** खरीदार पर 18% का भारी विलंब ब्याज लगाया गया है, जबकि बिल्डर के लेट होने पर मात्र ₹5/वर्ग फुट/माह का नाममात्र हर्जाना तय है। RERA के तहत दोनों पक्षों के लिए ब्याज दर समान (SBI MCLR + 2%) होना अनिवार्य है।\n* **कारपेट एरिया का खुलासा नहीं:** केवल 1,850 वर्ग फुट सुपर एरिया बताया गया है, RERA धारा 2(k) के तहत अनिवार्य कारपेट एरिया नहीं दिया गया।\n\n⚖️ यह केवल सूचनात्मक सारांश है, कानूनी सलाह नहीं।",
+      hinglish: "### 🚨 Critical Real Estate & RERA Flags\n\nIs Builder-Buyer Agreement mein **RERA 2016** aur Supreme Court ke **Suraj Lamp (2011)** judgment ke khilaaf critical clauses hain:\n\n* **GPA Title Void (Suraj Lamp):** Supreme Court ne 2011 mein clear kiya tha ki GPA / Agreement to Sell se immovable property ka मालिकाना haq transfer nahi hota; registered Sale Deed mandatory hai.\n* **Asymmetric Penalty Trap:** Buyer ke delay par **18% p.a.** interest mangte hain, lekin builder delay par sirf **₹5/sq.ft./month** dete hain. RERA Section 18 ke mutabiq dono ki delay penalty exactly equal (SBI MCLR + 2%) honi chahiye.\n* **Missing Carpet Area:** RERA Section 2(k) ke mutabiq exact net usable carpet area specify karna compulsory hai, sirf 1850 sq.ft. super built-up likhna violation hai.\n\n⚖️ Informational summary only, not legal advice.",
+    },
+  },
+
+  // 18. Health Insurance Policy Schedule (Wave 3 — IRDAI & Insurance Act)
+  "insurance-health": {
+    doc_type: "insurance_policy",
+    transcription:
+      "STAR ALLIED HEALTH INSURANCE CO. LTD. - POLICY SCHEDULE\nIRDAI Regn No: 129 | Policy No: SH-POL-2022-849102\nInsured: Vikramaditya Verma (Age: 38) | Plan: Star Optima Gold Policy\nPolicy Period: 15-Jul-2025 to 14-Jul-2026 (Continuous Tenure: 48 Months since July 2021)\nBase Sum Insured: ₹5,00,000 | Cumulative Bonus: ₹1,50,000 | Annual Premium: ₹18,450\nClause 3.1: Normal Room Rent capped at 1.0% of Sum Insured (₹5,00,000 * 1% = ₹5,000/day).\nProportionate Deduction: If room exceeds ₹5,000/day, all associated hospital expenses (surgeon, OT, anesthesia, nursing) shall be reduced proportionally by Permissible/Actual room rate ratio.\nClause 3.2: ICU Charges capped at 2.0% of Sum Insured (₹10,000/day).\nClause 4.8: Section 45 Insurance Act Moratorium active - 4 consecutive continuous renewal years completed.",
+    extracted: {
+      doc_type: "insurance_policy",
+      insurer_name: "Star Allied Health Insurance Co. Ltd.",
+      policy_number: "SH-POL-2022-849102",
+      policy_holder_name: "Vikramaditya Verma",
+      plan_name: "Star Optima Gold Policy",
+      policy_inception_date: "2021-07-15",
+      policy_renewal_date: "2025-07-15",
+      policy_tenure_years: 4,
+      policy_tenure_months: 48,
+      sum_insured: 500000,
+      premium_amount: 18450,
+      daily_room_rent_limit: 5000,
+      room_rent_limit_percent: 1.0,
+      icu_daily_limit: 10000,
+      has_proportionate_deduction: true,
+      co_pay_percent: 0,
+      moratorium_status: "protected",
+      waiting_period_ped_months: 36,
+      severity: "high",
+      extraction_confidence: "high",
+    },
+    explanation: {
+      en: "### 🛡️ Health Insurance Policy Audit: 1% Room Rent Trap & Statutory Protection\n\nYour health insurance policy schedule from **Star Allied Health Insurance Co. Ltd.** has two decisive legal and financial implications:\n\n* **The 1% Room Rent Proportionate Haircut Trap (Clause 3.1):** Your policy caps daily room rent at **1.0% of Sum Insured (₹5,000/day)**. If you choose a standard single private room costing ₹10,000/day during hospitalization, the insurer applies a **50% proportionate haircut (5,000 / 10,000)** not just on room rent, but across **ALL associated medical charges** (surgeon fees, operating theatre costs, anesthetist fees, specialist visits, and nursing). A ₹4,00,000 hospital bill could leave you with over ₹2,00,000 in unexpected out-of-pocket expenses.\n* **Section 45 Insurance Act Moratorium Defense (Active Protection):** You have maintained continuous, unbroken policy coverage for **48 months (4 years)** since July 2021. Under **Section 45 of the Insurance Act, 1938** (as amended by Insurance Laws Amendment Act 2015), after 3 continuous policy years, **no health insurance policy or claim can be questioned or repudiated** by the insurer on grounds of non-disclosure, pre-existing diseases, or misstatements made at the time of proposal. This provides absolute statutory immunity against arbitrary claim rejections.\n* **ICU Sub-limit:** ICU rent is capped at **2% of Sum Insured (₹10,000/day)**.\n\nAction required: Contact your insurer or broker to purchase a 'No Room Rent Capping' rider or upgrade your base Sum Insured to eliminate the catastrophic proportionate deduction trap.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or financial advice.",
+      hi: "### 🛡️ स्वास्थ्य बीमा समीक्षा: 1% रूम रेंट ट्रैप और वैधानिक सुरक्षा\n\nस्टार अलाइड हेल्थ इंश्योरेंस की इस पॉलिसी में दो अत्यंत महत्वपूर्ण बिंदु हैं:\n\n* **1% रूम रेंट आनुपातिक कटौती ट्रैप (Clause 3.1):** कमरे का किराया बीमा राशि के 1% (₹5,000/दिन) पर सीमित है। यदि आप ₹10,000/दिन वाले कमरे में भर्ती होते हैं, तो बीमा कंपनी न केवल कमरे पर बल्कि सर्जन, ऑपरेशन थिएटर (OT), एनेस्थीसिया और डॉक्टर की सभी फीस पर 50% की आनुपातिक कटौती कर देगी, जिससे आपको भारी जेब खर्च उठाना पड़ेगा।\n* **बीमा अधिनियम धारा 45 के तहत पूर्ण सुरक्षा:** आपकी पॉलिसी लगातार 48 महीने (4 साल) से सक्रिय है। धारा 45 के तहत 3 साल पूरे होने के बाद बीमा कंपनी किसी भी पूर्व बीमारी या प्रस्ताव पत्र में कमी के आधार पर आपका क्लेम खारिज नहीं कर सकती।\n\n⚖️ यह केवल सूचनात्मक मार्गदर्शन है, विधिक या वित्तीय सलाह नहीं है।",
+      hinglish: "### 🛡️ Health Insurance Audit: Room Rent Trap & Section 45 Shield\n\nIs Star Allied Health Insurance policy schedule mein 2 key findings hain:\n\n* **1% Room Rent Proportionate Deduction Trap:** Policy mein room rent ₹5,00,000 * 1% = ₹5,000/day par capped hai. Agar aapne ₹10,000/day ka single room liya, toh insurer doctor fees, OT charges, surgeon fee sab par **50% proportionate haircut** laga dega, jisse hospital bill ka aadha paisa khud bharna padega.\n* **Section 45 Moratorium Protection:** Policy continuous 4 saal (48 months) se active hai. Insurance Act ke Section 45 ke mutabiq 3 continuous saal poore hone ke baad insurer kisi bhi claim ko pre-existing illness ya misstatement ke bahane **reject nahi kar sakta**.\n\n⚖️ Informational summary only, not formal legal advice.",
     },
   },
 };

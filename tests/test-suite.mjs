@@ -20,6 +20,8 @@ import {
   verifyLoanSanction,
   verifyGSTNotice,
   verifyMSMEContract,
+  verifyPropertyContract,
+  verifyInsurancePolicy,
 } from "../src/lib/verification.ts";
 
 import { lookupSection } from "../src/lib/section-mapping.ts";
@@ -27,6 +29,8 @@ import {
   LoanSanctionSchema,
   GSTNoticeSchema,
   MSMEInvoiceSchema,
+  PropertyContractSchema,
+  InsurancePolicySchema,
 } from "../src/lib/schemas.ts";
 import { DEMO_SIMULATIONS } from "../src/lib/demo-simulator.ts";
 
@@ -371,6 +375,181 @@ test("Verification: MSME invoice exceeding 45 days flags statutory cap override 
   assert.ok(taxFlag, "Unpaid MSME bill must flag Section 43B(h) tax disallowance risk");
 });
 
+test("Verification: MSME invoice from Medium Enterprise exempt from Section 43B(h) tax disallowance", () => {
+  const res = verifyMSMEContract({
+    doc_type: "msme_contract",
+    enterprise_category: "medium",
+    agreed_credit_days: 30,
+    has_written_agreement: true,
+    days_overdue: 15,
+    payment_status: "unpaid",
+  });
+
+  const taxFlag = res.flags.find((f) => f.flag_id === "section_43b_h_tax_disallowance_risk");
+  assert.equal(taxFlag, undefined, "Medium enterprises must NOT be flagged for Section 43B(h) disallowance");
+});
+
+test("Verification: GST Notice with section variants like 74(1) flags fraud penalty", () => {
+  const res = verifyGSTNotice({
+    doc_type: "gst_notice",
+    section: "Section 74(1)",
+    has_personal_hearing: false,
+    days_remaining: 10,
+  });
+
+  const fraudFlag = res.flags.find((f) => f.flag_id === "high_penalty_fraud_allegation");
+  assert.ok(fraudFlag, "Section 74(1) variant must flag Section 74 fraud penalty");
+});
+
+test("Verification: Loan sanction with string percentage foreclosure fee flags correctly", () => {
+  const res = verifyLoanSanction({
+    doc_type: "loan_sanction",
+    interest_type: "floating",
+    borrower_type: "individual",
+    foreclosure_charge_pct: "3.5%",
+    is_kfs_present: true,
+    annual_percentage_rate: null,
+  });
+
+  const feeFlag = res.flags.find((f) => f.flag_id === "prohibited_foreclosure_fee");
+  assert.ok(feeFlag, "String-formatted foreclosure fee must be parsed and flagged");
+});
+
+// ─── Wave 3: RERA Property Contracts & Health Insurance Policies ─────────────
+
+test("Schema Validation: PropertyContractSchema validates real estate contract", () => {
+  const sample = {
+    doc_type: "property_contract",
+    project_name: "Horizon Skywalk Towers",
+    promoter_or_builder_name: "Apex Horizon Developers LLP",
+    buyer_or_allottee_name: "Rajesh Kumar Sharma",
+    rera_registration_number: "HRERA-GGM-2023-892",
+    total_consideration_inr: 14500000,
+    super_built_up_area_sqft: 1850,
+    delay_interest_rate_buyer_pct: 18.0,
+    delay_compensation_rate_promoter_pct: 2.0,
+    is_gpa_or_power_of_attorney_sale: true,
+    is_tripartite: true,
+    has_subvention_indemnity: true,
+  };
+
+  const parsed = PropertyContractSchema.parse(sample);
+  assert.equal(parsed.project_name, "Horizon Skywalk Towers");
+  assert.equal(parsed.delay_interest_rate_buyer_pct, 18.0);
+  assert.equal(parsed.is_gpa_or_power_of_attorney_sale, true);
+});
+
+test("Schema Validation: InsurancePolicySchema validates health policy schedule", () => {
+  const sample = {
+    doc_type: "insurance_policy",
+    insurer_name: "Star Allied Health Insurance Co. Ltd.",
+    policy_number: "SH-POL-2022-849102",
+    policy_holder_name: "Vikramaditya Verma",
+    policy_type: "individual_health",
+    continuous_coverage_months: 48,
+    sum_insured_inr: 500000,
+    daily_room_rent_limit_inr: 5000,
+    room_rent_cap_pct: 1.0,
+    icu_rent_cap_pct: 2.0,
+    has_proportionate_deduction_clause: true,
+  };
+
+  const parsed = InsurancePolicySchema.parse(sample);
+  assert.equal(parsed.insurer_name, "Star Allied Health Insurance Co. Ltd.");
+  assert.equal(parsed.daily_room_rent_limit_inr, 5000);
+  assert.equal(parsed.has_proportionate_deduction_clause, true);
+  assert.equal(parsed.continuous_coverage_months, 48);
+});
+
+test("Verification: Property Contract flags Suraj Lamp GPA title violation as critical", () => {
+  const res = verifyPropertyContract({
+    doc_type: "property_contract",
+    property_name: "Skywalk Towers",
+    mentions_gpa_or_power_of_attorney: true,
+    conveyance_type: "General Power of Attorney (GPA)",
+    buyer_delay_interest_rate_percent: 12.0,
+    builder_delay_compensation_percent: 12.0,
+  });
+
+  const gpaFlag = res.flags.find((f) => f.flag_id === "suraj_lamp_gpa_ownership_ban");
+  assert.ok(gpaFlag, "GPA conveyance must trigger Suraj Lamp violation");
+  assert.equal(gpaFlag.severity, "warning");
+  assert.equal(res.severity, "critical");
+});
+
+test("Verification: Property Contract flags RERA asymmetric delay penalty", () => {
+  const res = verifyPropertyContract({
+    doc_type: "property_contract",
+    property_name: "Skywalk Towers",
+    buyer_delay_interest_rate_percent: 18.0,
+    builder_delay_compensation: "Rs. 5 per sq.ft. per month",
+  });
+
+  const penaltyFlag = res.flags.find((f) => f.flag_id === "rera_asymmetric_delay_penalty");
+  assert.ok(penaltyFlag, "Asymmetric delay penalty (18% buyer vs Rs 5 builder) must be flagged");
+});
+
+test("Verification: Property Contract flags missing RERA carpet area and calculates loading", () => {
+  const res = verifyPropertyContract({
+    doc_type: "property_contract",
+    super_built_up_area_sqft: 1850,
+    carpet_area_sqft: null,
+  });
+
+  const carpetFlag = res.flags.find((f) => f.flag_id === "rera_missing_carpet_area");
+  assert.ok(carpetFlag, "Missing carpet area must be flagged under RERA Sec 2(k)");
+});
+
+test("Verification: Property Contract flags tripartite subvention indemnity trap", () => {
+  const res = verifyPropertyContract({
+    doc_type: "property_contract",
+    has_tripartite_subvention_clause: true,
+    subvention_scheme_type: "10:90",
+  });
+
+  const subventionFlag = res.flags.find((f) => f.flag_id === "subvention_tripartite_indemnity_trap");
+  assert.ok(subventionFlag, "Tripartite subvention indemnity clause must be flagged");
+});
+
+test("Verification: Health Insurance flags 1% room rent proportionate deduction haircut", () => {
+  const res = verifyInsurancePolicy({
+    doc_type: "insurance_policy",
+    sum_insured: 500000,
+    daily_room_rent_limit: 5000,
+    room_rent_limit_percent: 1.0,
+    has_proportionate_deduction: true,
+  });
+
+  const roomFlag = res.flags.find((f) => f.flag_id === "room_rent_proportionate_deduction_trap");
+  assert.ok(roomFlag, "1% room rent cap with proportionate deduction must be flagged");
+  assert.ok(roomFlag.detail.includes("50%"), "Detail should explain 50% proportionate deduction haircut math");
+});
+
+test("Verification: Health Insurance identifies Section 45 3-year incontestability moratorium defense", () => {
+  const res = verifyInsurancePolicy({
+    doc_type: "insurance_policy",
+    sum_insured: 500000,
+    policy_tenure_years: 4,
+    policy_tenure_months: 48,
+  });
+
+  const sec45Flag = res.flags.find((f) => f.flag_id === "section_45_moratorium_defense");
+  assert.ok(sec45Flag, "4-year active tenure must trigger Section 45 incontestability defense");
+  assert.equal(sec45Flag.severity, "info");
+});
+
+test("Verification: Health Insurance flags illegal claim repudiation if policy over 3 years old", () => {
+  const res = verifyInsurancePolicy({
+    doc_type: "insurance_policy",
+    policy_tenure_years: 4,
+    claim_repudiation_threatened: true,
+  });
+
+  const repudiationFlag = res.flags.find((f) => f.flag_id === "section_45_illegal_repudiation_risk");
+  assert.ok(repudiationFlag, "Repudiation after 3 years must be flagged as critical statutory violation");
+  assert.equal(res.severity, "critical");
+});
+
 // ─── 4. Demo Documents Integrity Tests ──────────────────────────────────────
 
 const demoDocsDir = path.join(__dirname, "..", "public", "demo-docs");
@@ -391,9 +570,11 @@ const expectedDocs = [
   "banking-home-loan-sanction.html",
   "gst-drc01-notice.html",
   "msme-overdue-invoice.html",
+  "property-builder-buyer-agreement.html",
+  "health-insurance-policy-schedule.html",
 ];
 
-test("Demo Documents: all 16 synthetic test documents exist and have non-empty content", () => {
+test("Demo Documents: all 18 synthetic test documents exist and have non-empty content", () => {
   for (const docName of expectedDocs) {
     const fullPath = path.join(demoDocsDir, docName);
     assert.ok(fs.existsSync(fullPath), `Document ${docName} must exist`);
@@ -402,7 +583,7 @@ test("Demo Documents: all 16 synthetic test documents exist and have non-empty c
   }
 });
 
-test("Demo Simulator: contains verified ground-truth simulations for all 16 preset documents", () => {
+test("Demo Simulator: contains verified ground-truth simulations for all 18 preset documents", () => {
   const requiredKeys = [
     "it-143-1",
     "it-new-act",
@@ -420,6 +601,8 @@ test("Demo Simulator: contains verified ground-truth simulations for all 16 pres
     "bank-home-loan",
     "gst-drc01",
     "msme-45day",
+    "property-bba",
+    "insurance-health",
   ];
 
   for (const key of requiredKeys) {

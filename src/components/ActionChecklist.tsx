@@ -251,6 +251,70 @@ export function ActionChecklist({
       ];
     }
 
+    if (docType === "property_contract") {
+      return [
+        {
+          id: "refuse-gpa-conveyance",
+          text: "Refuse GPA/SA/Will title conveyance: under Supreme Court Suraj Lamp (2011), immovable property can strictly be conveyed via a registered Sale Deed under Section 54 Transfer of Property Act.",
+          urgency: "urgent",
+        },
+        {
+          id: "enforce-rera-delay-parity",
+          text: "Enforce RERA Penalty Parity: under Section 18 / Rule 15, the promoter cannot charge higher delay interest (e.g. 18%) than the compensation rate they pay you for delivery delay (SBI MCLR + 2%).",
+          urgency: "urgent",
+        },
+        {
+          id: "verify-rera-portal",
+          text: "Verify the project RERA registration number and sanctioned layout plans directly on the State Real Estate Regulatory Authority portal.",
+          urgency: "urgent",
+          linkText: "RERA Portal",
+          linkUrl: "https://rera.nic.in",
+        },
+        {
+          id: "demand-carpet-area",
+          text: "Demand explicit specification of net usable Carpet Area (RERA Sec 2(k)) rather than ambiguous 'Super Built-up' or 'Saleable' area with excessive loading factors.",
+          urgency: "recommended",
+        },
+        {
+          id: "reject-tripartite-indemnity",
+          text: "Refuse clauses indemnifying the developer against bank default in 10:90 / 20:80 subvention schemes; borrower remains liable to bank regardless of construction stalls.",
+          urgency: "recommended",
+        },
+      ];
+    }
+
+    if (docType === "insurance_policy") {
+      return [
+        {
+          id: "upgrade-room-rent-cap",
+          text: "CRITICAL: Upgrade policy or add a rider to remove the 1% Room Rent Cap. Exceeding the cap triggers proportional deductions on ALL hospital expenses (OT, doctor, surgeon fees).",
+          urgency: "urgent",
+        },
+        {
+          id: "invoke-section-45",
+          text: "If policy is over 3 years old (36 continuous months), invoke Section 45 of Insurance Act 1938: insurers are barred from questioning or repudiating claims for pre-existing illness or misstatement.",
+          urgency: "urgent",
+        },
+        {
+          id: "verify-icu-sublimit",
+          text: "Inspect ICU daily sub-limits (standard 2% of SI) and clarify whether associate ICU consultations suffer proportional haircuts.",
+          urgency: "recommended",
+        },
+        {
+          id: "preserve-renewal-receipts",
+          text: "Maintain continuous premium renewal receipts without any break to preserve your accumulated Section 45 moratorium tenure and waiting period waivers.",
+          urgency: "recommended",
+        },
+        {
+          id: "bima-bharosa-portal",
+          text: "If insurer wrongfully repudiates a claim after 3 years or miscalculates room rent haircuts, escalate to IRDAI Bima Bharosa Ombudsman portal.",
+          urgency: "optional",
+          linkText: "Bima Bharosa",
+          linkUrl: "https://bimabharosa.irdai.gov.in",
+        },
+      ];
+    }
+
     return [
       {
         id: "consult-expert",

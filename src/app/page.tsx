@@ -180,11 +180,11 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--color-muted)] shrink-0">
-            <span>16 test presets</span>
-            <span>:</span>
+            <span>18 test presets</span>
+            <span>·</span>
             <span>ICAI 1961 ↔ 2025 Act</span>
-            <span>:</span>
-            <span>RBI / MSMED code audits</span>
+            <span>·</span>
+            <span>RBI / MSMED / RERA / IRDAI</span>
           </div>
         </div>
 
@@ -207,7 +207,7 @@ export default function Home() {
                     : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
                 }`}
               >
-                Sample presets (16)
+                Sample presets (18)
               </button>
               <button
                 type="button"

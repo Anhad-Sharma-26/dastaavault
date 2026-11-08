@@ -14,6 +14,8 @@ export type DocType =
   | "loan_sanction"
   | "gst_notice"
   | "msme_contract"
+  | "property_contract"
+  | "insurance_policy"
   | "unsupported";
 
 /** Risk severity levels (descending). */

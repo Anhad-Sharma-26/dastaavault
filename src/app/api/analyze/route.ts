@@ -28,6 +28,8 @@ import {
   loanSanctionJsonSchema,
   gstNoticeJsonSchema,
   msmeInvoiceJsonSchema,
+  propertyContractJsonSchema,
+  insurancePolicyJsonSchema,
   generalDocJsonSchema,
 } from "@/lib/schemas";
 import {
@@ -43,6 +45,8 @@ import {
   verifyLoanSanction,
   verifyGSTNotice,
   verifyMSMEContract,
+  verifyPropertyContract,
+  verifyInsurancePolicy,
   verifyGeneralDoc,
 } from "@/lib/verification";
 import { getSectionMappingForPrompt } from "@/lib/section-mapping";
@@ -251,6 +255,10 @@ export async function POST(request: Request) {
               ? verifyGSTNotice(sim.extracted as any)
               : sim.doc_type === "msme_contract"
               ? verifyMSMEContract(sim.extracted as any)
+              : sim.doc_type === "property_contract"
+              ? verifyPropertyContract(sim.extracted as any)
+              : sim.doc_type === "insurance_policy"
+              ? verifyInsurancePolicy(sim.extracted as any)
               : verifyGeneralDoc(sim.extracted as any);
 
           emit("verification", {
@@ -347,6 +355,10 @@ export async function POST(request: Request) {
             ? gstNoticeJsonSchema
             : docType === "msme_contract"
             ? msmeInvoiceJsonSchema
+            : docType === "property_contract"
+            ? propertyContractJsonSchema
+            : docType === "insurance_policy"
+            ? insurancePolicyJsonSchema
             : generalDocJsonSchema;
 
         const extraction = await callModelWithStructuredOutput(
@@ -385,6 +397,10 @@ export async function POST(request: Request) {
             ? verifyGSTNotice(extractedData)
             : docType === "msme_contract"
             ? verifyMSMEContract(extractedData)
+            : docType === "property_contract"
+            ? verifyPropertyContract(extractedData)
+            : docType === "insurance_policy"
+            ? verifyInsurancePolicy(extractedData)
             : verifyGeneralDoc(extractedData);
 
         emit("verification", {

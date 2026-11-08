@@ -17,6 +17,8 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
   const isLoan = docType === "loan_sanction";
   const isGST = docType === "gst_notice";
   const isMSME = docType === "msme_contract";
+  const isProperty = docType === "property_contract";
+  const isInsurance = docType === "insurance_policy";
   const isGeneral = docType === "unsupported";
   const isBlank = data.is_blank_template ?? (isForm ? true : false);
 
@@ -64,6 +66,38 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
         return "SEC 43B(h) TAX DISALLOWANCE RISK";
       }
       return "MSME COMMERCIAL INVOICE";
+    }
+
+    if (isProperty) {
+      if (flags.some((f) => f.flag_id === "suraj_lamp_gpa_ownership_ban")) {
+        return "GPA TITLE TRAP (SURAJ LAMP VIOLATION)";
+      }
+      if (flags.some((f) => f.flag_id === "rera_asymmetric_delay_penalty")) {
+        return "RERA ASYMMETRIC CLAUSE DETECTED";
+      }
+      if (flags.some((f) => f.flag_id === "rera_missing_carpet_area")) {
+        return "RERA CARPET AREA MISSING";
+      }
+      if (severity === "critical" || severity === "high") {
+        return "HIGH RISK REAL ESTATE CONTRACT";
+      }
+      return "RERA PROPERTY CONVEYANCE";
+    }
+
+    if (isInsurance) {
+      if (flags.some((f) => f.flag_id === "room_rent_proportionate_deduction_trap")) {
+        return "1% ROOM RENT TRAP DETECTED";
+      }
+      if (flags.some((f) => f.flag_id === "section_45_moratorium_defense")) {
+        return "SEC 45 MORATORIUM PROTECTED";
+      }
+      if (flags.some((f) => f.flag_id === "section_45_illegal_repudiation_risk")) {
+        return "ILLEGAL REPUDIATION RISK (SEC 45)";
+      }
+      if (severity === "critical" || severity === "high") {
+        return "HIGH RISK POLICY LIMITS";
+      }
+      return "HEALTH INSURANCE POLICY";
     }
 
     if (isTax) {
@@ -129,6 +163,10 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
                 ? "GST Notice (DRC-01)"
                 : isMSME
                 ? "MSME Commercial Invoice"
+                : isProperty
+                ? "Property Agreement (RERA)"
+                : isInsurance
+                ? "Health Insurance Policy"
                 : "General Document"}
             </span>
             {data.pan_masked && (
@@ -151,6 +189,16 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
                 · Udyam: {data.supplier_udyam_number}
               </span>
             )}
+            {data.rera_registration_number && (
+              <span className="text-xs text-[var(--color-muted)] font-mono">
+                · RERA: {data.rera_registration_number}
+              </span>
+            )}
+            {data.policy_number && (
+              <span className="text-xs text-[var(--color-muted)] font-mono">
+                · Policy: {data.policy_number}
+              </span>
+            )}
           </div>
           <h2 className="text-lg sm:text-xl font-semibold text-[var(--color-ink)] tracking-tight">
             {isTax
@@ -169,6 +217,14 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? data.invoice_number
                 ? `Commercial Invoice #${data.invoice_number}`
                 : "MSME Commercial Invoice"
+              : isProperty
+              ? data.property_name
+                ? `${data.property_name} Conveyance`
+                : "Builder-Buyer Agreement (RERA)"
+              : isInsurance
+              ? data.plan_name
+                ? `${data.insurer_name || "Health"} - ${data.plan_name}`
+                : "Health Insurance Policy Schedule"
               : data.title || data.notice_type_name || "Document Overview"}
           </h2>
           <p className="text-xs text-[var(--color-muted)]">
@@ -201,6 +257,20 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
                 {data.supplier_name ? `Supplier: ${data.supplier_name} · ` : ""}
                 {data.buyer_name ? `Buyer: ${data.buyer_name} · ` : ""}
                 {data.supplier_enterprise_type ? `Category: ${String(data.supplier_enterprise_type).toUpperCase()}` : ""}
+              </>
+            )}
+            {isProperty && (
+              <>
+                {data.builder_promoter_name ? `Promoter: ${data.builder_promoter_name} · ` : ""}
+                {data.unit_number ? `Unit ${data.unit_number} · ` : ""}
+                {data.possession_date ? `Possession: ${data.possession_date}` : ""}
+              </>
+            )}
+            {isInsurance && (
+              <>
+                {data.insurer_name ? `Insurer: ${data.insurer_name} · ` : ""}
+                {data.sum_insured ? `Sum Insured: ₹${data.sum_insured.toLocaleString("en-IN")} · ` : ""}
+                {data.policy_tenure_years ? `Active: ${data.policy_tenure_years} yrs` : (data.policy_tenure_months ? `Active: ${Math.floor(data.policy_tenure_months / 12)} yrs` : "")}
               </>
             )}
             {isGeneral && (data.summary || "General document")}
@@ -355,6 +425,80 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
         </div>
       )}
 
+      {/* RERA & Property Conveyance Safeguards Card */}
+      {isProperty && (
+        <div className="letterpress-card p-4 space-y-2 text-xs">
+          <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
+            <span>RERA 2016 &amp; Supreme Court Conveyance Protections</span>
+            <span>Section 18, Rule 15 &amp; Suraj Lamp</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-[var(--color-muted)]">Title Conveyance Rule:</span>
+              <p className="font-mono font-semibold text-xs text-[var(--color-ink)]">
+                Sale Deed mandatory (GPA void under Suraj Lamp)
+              </p>
+            </div>
+
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-[var(--color-muted)]">Delay Penalty Parity:</span>
+              <p className="font-mono font-semibold text-xs text-[var(--color-accent-2)]">
+                Promoter must match Buyer delay rate (SBI MCLR+2%)
+              </p>
+            </div>
+
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-[var(--color-muted)]">Carpet Area Disclosure:</span>
+              <p className="font-mono font-semibold text-xs text-[var(--color-ink)]">
+                Mandatory RERA Sec 2(k) net usable floor area
+              </p>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-[var(--color-muted)] leading-relaxed pt-1">
+            Under Supreme Court <em>Suraj Lamp (2011)</em>, GPA sales transfer no title. Under RERA Section 18 / Rule 15, promoters cannot charge one-sided usurious delay penalties while paying trivial default compensation.
+          </p>
+        </div>
+      )}
+
+      {/* Health Insurance & Section 45 Safeguards Card */}
+      {isInsurance && (
+        <div className="letterpress-card p-4 space-y-2 text-xs">
+          <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
+            <span>Insurance Act 1938 &amp; IRDAI Safeguards</span>
+            <span>Section 45 &amp; Room Rent Haircut Rules</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-[var(--color-muted)]">3-Year Incontestability:</span>
+              <p className="font-mono font-semibold text-xs text-[var(--color-ink)]">
+                Sec 45 Moratorium protects against claim repudiation
+              </p>
+            </div>
+
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-[var(--color-muted)]">1% Room Rent Limit:</span>
+              <p className="font-mono font-semibold text-xs text-[var(--color-accent-2)]">
+                Exceeding cap triggers proportional cut on ALL fees
+              </p>
+            </div>
+
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-[var(--color-muted)]">ICU Sub-limit:</span>
+              <p className="font-mono font-semibold text-xs text-[var(--color-ink)]">
+                Standard 2% of SI cap or ICU proportional haircut
+              </p>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-[var(--color-muted)] leading-relaxed pt-1">
+            Section 45 of Insurance Act bars insurers from questioning or repudiating policies after 3 continuous years on grounds of misstatement. Choosing a room above the daily limit slashes your entire hospital claim proportionally.
+          </p>
+        </div>
+      )}
+
       {/* 4-Metric Key Figures Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Metric 1: Financial Amount */}
@@ -366,6 +510,10 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? "Tax demand due"
               : isMSME
               ? "Total invoice value"
+              : isProperty
+              ? "Total consideration"
+              : isInsurance
+              ? "Sum insured"
               : isForm
               ? "Tax demand"
               : isTax
@@ -394,6 +542,18 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
                 `₹${data.total_amount.toLocaleString("en-IN")}`
               ) : (
                 "₹0 (Nil)"
+              )
+            ) : isProperty ? (
+              data.total_consideration ? (
+                `₹${data.total_consideration.toLocaleString("en-IN")}`
+              ) : (
+                "Not stated"
+              )
+            ) : isInsurance ? (
+              data.sum_insured ? (
+                `₹${data.sum_insured.toLocaleString("en-IN")}`
+              ) : (
+                "Not stated"
               )
             ) : isForm ? (
               isBlank ? "₹0 (Template)" : "₹0"
@@ -426,6 +586,14 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? data.tax_amount
                 ? `Incl. GST ₹${data.tax_amount.toLocaleString("en-IN")}`
                 : "Payable to supplier"
+              : isProperty
+              ? data.advance_amount_paid
+                ? `Booking paid: ₹${data.advance_amount_paid.toLocaleString("en-IN")}`
+                : "Agreed consideration"
+              : isInsurance
+              ? data.premium_amount
+                ? `Premium: ₹${data.premium_amount.toLocaleString("en-IN")}/yr`
+                : "Base hospitalization cover"
               : isForm
               ? isBlank
                 ? "No liability assessed"
@@ -451,6 +619,10 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? "Filing window"
               : isMSME
               ? "Payment term"
+              : isProperty
+              ? "Delay penalty"
+              : isInsurance
+              ? "Room rent cap"
               : isForm
               ? "Filing window"
               : isTax
@@ -476,6 +648,20 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ) : (
                 "15 days default"
               )
+            ) : isProperty ? (
+              data.buyer_delay_interest_rate_percent ? (
+                `Buyer ${data.buyer_delay_interest_rate_percent}% p.a.`
+              ) : (
+                "Check parity"
+              )
+            ) : isInsurance ? (
+              data.daily_room_rent_limit ? (
+                `₹${data.daily_room_rent_limit.toLocaleString("en-IN")}/day`
+              ) : data.room_rent_limit_percent ? (
+                `${data.room_rent_limit_percent}% SI/day`
+              ) : (
+                "No limit"
+              )
             ) : isForm ? (
               data.response_deadline || "As per rules"
             ) : isTax ? (
@@ -499,6 +685,14 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? data.agreed_credit_days && data.agreed_credit_days > 45
                 ? `Clause of ${data.agreed_credit_days}d VOID`
                 : "MSMED Sec 15 limit"
+              : isProperty
+              ? data.builder_delay_compensation
+                ? `Builder: ${data.builder_delay_compensation}`
+                : "RERA Rule 15 parity"
+              : isInsurance
+              ? data.has_proportionate_deduction
+                ? "Proportionate haircut active"
+                : "No proportionate cut"
               : isForm
               ? isBlank
                 ? "Prior to ITR / filing"
@@ -520,6 +714,10 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? "Notice Authority"
               : isMSME
               ? "Overdue & Interest"
+              : isProperty
+              ? "Carpet area & loading"
+              : isInsurance
+              ? "Policy tenure"
               : isForm
               ? "Prescribed authority"
               : isTax
@@ -543,6 +741,20 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ) : (
                 "In terms"
               )
+            ) : isProperty ? (
+              data.carpet_area_sqft ? (
+                `${data.carpet_area_sqft} sq.ft.`
+              ) : (
+                "Carpet area missing"
+              )
+            ) : isInsurance ? (
+              data.policy_tenure_years ? (
+                `${data.policy_tenure_years} years active`
+              ) : data.policy_tenure_months ? (
+                `${Math.floor(data.policy_tenure_months / 12)} years active`
+              ) : (
+                "1 year term"
+              )
             ) : isForm ? (
               data.issuing_authority || "Income Tax Department"
             ) : isTax ? (
@@ -564,6 +776,16 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? data.days_overdue && data.days_overdue > 0
                 ? "19.5% p.a. penal interest"
                 : "Zero interest accrued"
+              : isProperty
+              ? data.loading_factor_percent
+                ? `${data.loading_factor_percent}% loading factor`
+                : data.super_built_up_area_sqft
+                ? `Super: ${data.super_built_up_area_sqft} sq.ft.`
+                : "RERA Sec 2(k) mandate"
+              : isInsurance
+              ? (data.policy_tenure_years && data.policy_tenure_years >= 3) || (data.policy_tenure_months && data.policy_tenure_months >= 36)
+                ? "Sec 45 Moratorium active"
+                : "Contestable window"
               : isForm
               ? isBlank
                 ? "Blank template"

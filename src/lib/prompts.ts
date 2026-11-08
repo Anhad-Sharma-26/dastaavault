@@ -42,7 +42,9 @@ export function getClassificationPrompt(text: string): string {
 4. "loan_sanction" — Any bank or NBFC loan sanction letter, loan agreement, or Key Fact Statement (KFS) table (e.g., home loan, personal loan, MSME term loan, car loan sanction letters from SBI, HDFC, ICICI, etc.).
 5. "gst_notice" — Any GST notice, summary of show cause notice (Form GST DRC-01), pre-SCN intimation (Form GST DRC-01A), or order (DRC-07) issued under Section 73, 74, or 74A of the CGST/SGST Act.
 6. "msme_contract" — Any commercial B2B supplier invoice, purchase order, or vendor supply contract with credit terms governed by the MSMED Act 2006 (Section 15/16) or Income Tax Act Section 43B(h).
-7. "unsupported" — Any other general document (e.g., electricity or utility bills, identity cards, corporate reports).
+7. "property_contract" — Any real estate agreement, builder-buyer agreement (BBA), deed of conveyance, sale deed, agreement to sell, GPA property transfer, allotment letter, or tripartite bank-builder subvention contract.
+8. "insurance_policy" — Any health insurance policy schedule, mediclaim certificate, health insurance policy wording, or claim repudiation/rejection letter.
+9. "unsupported" — Any other general document (e.g., electricity or utility bills, identity cards, corporate reports).
 
 Rules:
 - If the document is a blank statutory form with unfilled tables/blanks, classify as "statutory_form" and set "is_empty_or_template" to true.
@@ -58,7 +60,7 @@ ${text}
 
 Respond with valid JSON matching this schema:
 {
-  "doc_type": "income_tax_notice" | "rent_agreement" | "statutory_form" | "loan_sanction" | "gst_notice" | "msme_contract" | "unsupported",
+  "doc_type": "income_tax_notice" | "rent_agreement" | "statutory_form" | "loan_sanction" | "gst_notice" | "msme_contract" | "property_contract" | "insurance_policy" | "unsupported",
   "is_empty_or_template": boolean,
   "form_name": string | null,
   "section_ref": string | null,
@@ -221,6 +223,59 @@ ${text}
 Extract all fields and respond with valid JSON matching the MSME Invoice schema.`;
   }
 
+  if (docType === "property_contract") {
+    return `You are an expert Indian real estate and property law analyst. Extract structured information from the following builder-buyer agreement, sale deed, or property conveyance text.
+
+IMPORTANT RULES:
+1. Work from the masked text below.
+2. Determine "agreement_type": "builder_buyer_agreement", "sale_deed", "agreement_to_sell", "gpa_transfer", "tripartite_agreement", "allotment_letter", or "other".
+3. Extract "project_name", "promoter_or_builder_name", and "buyer_or_allottee_name".
+4. Extract "rera_registration_number" if present.
+5. Extract "total_consideration_inr" (total cost/purchase price).
+6. Extract "super_built_up_area_sqft" and "rera_carpet_area_sqft". If RERA carpet area is not explicitly broken down, set to null.
+7. Extract "possession_date" (YYYY-MM-DD).
+8. Extract "delay_interest_rate_buyer_pct" (interest charged to buyer for late installment payments, e.g. 18.0).
+9. Extract "delay_compensation_rate_promoter_pct" (compensation paid by builder for construction delay, e.g. 1.5% or ₹5/sq.ft. converted).
+10. Determine "is_gpa_or_power_of_attorney_sale": true if title is conveyed via General Power of Attorney / Agreement to Sell rather than registered sale deed.
+11. Determine "is_tripartite": true if bank, buyer, and builder are joint parties.
+12. Determine "has_subvention_indemnity": true if buyer indemnifies lender unconditionally even during builder default.
+13. Set "severity": "critical" if GPA sale, "high" if asymmetric delay interest, else "low".
+
+Masked document text:
+---
+${text}
+---
+
+Extract all fields and respond with valid JSON matching the Property Contract schema.`;
+  }
+
+  if (docType === "insurance_policy") {
+    return `You are an expert Indian health insurance policy analyst. Extract structured information from the following health insurance policy schedule or mediclaim certificate.
+
+IMPORTANT RULES:
+1. Work from the masked text below.
+2. Extract "insurer_name" (e.g. Star Health, HDFC ERGO, Care Health, Niva Bupa, ICICI Lombard).
+3. Extract "policy_number" and "policy_holder_name".
+4. Extract "sum_insured_inr" (base coverage in INR).
+5. Extract "policy_start_date" (YYYY-MM-DD).
+6. Extract "continuous_coverage_months" (total months of uninterrupted active policy coverage).
+7. Extract "room_rent_cap_pct" (daily room rent cap percentage of sum insured, e.g. 1.0 for 1%).
+8. Extract "daily_room_rent_limit_inr" if a fixed rupee limit is specified (e.g. 5000).
+9. Extract "icu_rent_cap_pct" (ICU room rent cap percentage, e.g. 2.0 for 2%).
+10. Determine "has_proportionate_deduction_clause": true if insurer applies proportionate deduction on associate medical/surgical charges if room rent exceeds cap.
+11. Extract "co_payment_pct" if any.
+12. Determine "claim_repudiated": true if document is a claim rejection/repudiation letter.
+13. Extract "repudiation_ground" if claim is denied.
+14. Set "severity": "critical" if 1% room rent cap or illegal repudiation after 3 years, else "low".
+
+Masked document text:
+---
+${text}
+---
+
+Extract all fields and respond with valid JSON matching the Insurance Policy schema.`;
+  }
+
   if (docType === "statutory_form") {
     return `You are an expert Indian statutory & tax document analyst. Extract structured information from the following statutory form text (even if it is a blank or empty template).
 
@@ -313,6 +368,19 @@ IMPORTANT:
 - Check the credit period. Under Section 15 of the MSMED Act, payment terms cannot exceed 45 days (or 15 days without written agreement). Any contract clause allowing 60, 90, or 120 days is VOID.
 - Calculate statutory compound interest with monthly rests at 3× the RBI bank rate (19.5% p.a.) under Section 16 if overdue.
 - Alert the buyer regarding Section 43B(h) of the Income Tax Act: overdue MSME bills at financial year-end are completely disallowed as tax deductions, inflating their taxable profit.`;
+  } else if (docType === "property_contract") {
+    docTypeGuidance = `This is an Indian Real Estate Agreement or Builder-Buyer Contract (BBA).
+IMPORTANT:
+- SURAJ LAMP RULING: If property is being purchased via General Power of Attorney (GPA), Agreement to Sell (ATS), or Will without a registered Sale Deed, highlight that under Supreme Court ruling in Suraj Lamp (2011 11 SCC 787), GPA transactions DO NOT confer legal title or ownership.
+- RERA PENALTY PARITY: Compare buyer delay interest rate with developer delay compensation. Under Section 18 of RERA 2016, interest rates charged to allottee must equal the compensation rate payable by promoter (SBI MCLR + 2%). Any asymmetric clause is void.
+- CARPET AREA: Highlight whether net usable RERA carpet area is disclosed per Section 2(k) vs super built-up loading.
+- TRIPARTITE SUBVENTION: Warn against unconditional borrower indemnity clauses during builder construction defaults.`;
+  } else if (docType === "insurance_policy") {
+    docTypeGuidance = `This is a Health Insurance Policy Schedule or Mediclaim Certificate.
+IMPORTANT:
+- 1% ROOM RENT TRAP: If daily room rent is capped to 1% of Sum Insured, explain the proportionate deduction trap with numbers: exceeding the room limit slashes not just the room rent difference, but scales down ALL surgeon fees, operation theatre (OT) charges, anesthetist fees, and nursing charges across the entire hospital bill!
+- SECTION 45 MORATORIUM: Under Section 45 of the Insurance Act 1938, after 3 continuous years (36 months) of coverage, the insurer CANNOT repudiate or question any claim on grounds of pre-existing condition non-disclosure. If claim is rejected after 3 years, advise on Insurance Ombudsman appeal.
+- Highlight ICU daily limits and co-payment obligations.`;
   } else if (docType === "statutory_form") {
     docTypeGuidance = `This is an Indian Statutory Form or Template (e.g. Form No. 7 under Section 35(2AA), Form No. 1, etc.).
 IMPORTANT:

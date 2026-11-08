@@ -414,13 +414,14 @@ export function verifyLoanSanction(loan: Record<string, any>): VerificationResul
   const isIndividual = loan.borrower_type !== "non_individual";
   const isFloating = loan.interest_type === "floating" || !loan.interest_type;
 
-  if (isIndividual && isFloating && foreclosurePct && foreclosurePct > 0) {
+  const numForeclosurePct = typeof foreclosurePct === "string" ? parseFloat(foreclosurePct) : Number(foreclosurePct);
+  if (isIndividual && isFloating && !isNaN(numForeclosurePct) && numForeclosurePct > 0) {
     flags.push(
       flag(
         "prohibited_foreclosure_fee",
         "warning",
         "Prohibited foreclosure fee detected",
-        `Agreement specifies a ${foreclosurePct}% foreclosure/prepayment charge. Under binding RBI Master Directions (DBOD.No.Dir.BC.107/2011-12), lenders are STRICTLY FORBIDDEN from levying foreclosure or prepayment penalties on floating-rate loans to individual borrowers.`
+        `Agreement specifies a ${numForeclosurePct}% foreclosure/prepayment charge. Under binding RBI Master Directions (DBOD.No.Dir.BC.107/2011-12), lenders are STRICTLY FORBIDDEN from levying foreclosure or prepayment penalties on floating-rate loans to individual borrowers.`
       )
     );
     severity = promoteSeverity(severity, "high");
@@ -493,7 +494,8 @@ export function verifyGSTNotice(notice: Record<string, any>): VerificationResult
   const hearingDate = notice.hearing_date ?? notice.personal_hearing_date;
 
   // 1. Section 74 Fraud / Willful Suppression vs Section 73 Non-Fraud
-  if (section === "74") {
+  const isSection74 = section ? String(section).includes("74") : false;
+  if (isSection74) {
     flags.push(
       flag(
         "high_penalty_fraud_allegation",
@@ -625,7 +627,9 @@ export function verifyMSMEContract(invoice: Record<string, any>): VerificationRe
   }
 
   // 3. Income Tax Section 43B(h) Disallowance Risk
-  if (invoice.payment_status === "unpaid" || (invoice.days_overdue && invoice.days_overdue > 0)) {
+  const category = invoice.enterprise_category ?? invoice.supplier_enterprise_type;
+  const isMSE = category !== "medium";
+  if (isMSE && (invoice.payment_status === "unpaid" || (invoice.days_overdue && invoice.days_overdue > 0))) {
     flags.push(
       flag(
         "section_43b_h_tax_disallowance_risk",
@@ -635,6 +639,241 @@ export function verifyMSMEContract(invoice: Record<string, any>): VerificationRe
       )
     );
     severity = promoteSeverity(severity, "high");
+  }
+
+  return { flags, severity };
+}
+
+
+// ─── Real Estate: Property Conveyance & Builder-Buyer Agreement (RERA) ────────
+
+/**
+ * Run deterministic verification checks on a Real Estate Conveyance / Builder-Buyer Agreement.
+ *
+ * @param contract - Extracted property agreement details.
+ * @returns Verification result with flags and risk severity.
+ */
+export function verifyPropertyContract(contract: Record<string, any>): VerificationResult {
+  const flags: Flag[] = [];
+  let severity: Severity = contract.severity ?? "low";
+
+  // 1. Supreme Court Suraj Lamp Judgment (2011 11 SCC 787) — GPA Ownership Ban
+  const isGpaSale =
+    contract.is_gpa_or_power_of_attorney_sale === true ||
+    contract.mentions_gpa_or_power_of_attorney === true ||
+    contract.agreement_type === "gpa_transfer" ||
+    (contract.transfer_mode && String(contract.transfer_mode).toLowerCase().includes("power of attorney")) ||
+    (contract.conveyance_type && String(contract.conveyance_type).toLowerCase().includes("gpa"));
+
+  if (isGpaSale) {
+    flags.push(
+      flag(
+        "suraj_lamp_gpa_ownership_ban",
+        "warning",
+        "GPA / Power of Attorney Sale Void (Suraj Lamp Violation)",
+        "In Suraj Lamp & Industries (2011 11 SCC 787), the Supreme Court ruled that immovable property can ONLY be legally transferred through a registered Deed of Conveyance under Section 54 of Transfer of Property Act and Section 17 of Registration Act. Transactions via GPA, Agreement to Sell, or Will do NOT confer legal ownership or marketable title."
+      )
+    );
+    severity = promoteSeverity(severity, "critical");
+  }
+
+  // 2. RERA Section 18 / Rule 15 Penalty Parity Mandate
+  const buyerDelayRate =
+    contract.delay_interest_rate_buyer_pct ??
+    contract.buyer_interest_penalty_rate ??
+    contract.buyer_delay_interest_rate_percent;
+  const promoterDelayRate =
+    contract.delay_compensation_rate_promoter_pct ??
+    contract.promoter_compensation_rate ??
+    contract.builder_delay_compensation_percent;
+  const builderCompensationStr = contract.builder_delay_compensation;
+
+  const isAsymmetric =
+    contract.penalty_is_asymmetric === true ||
+    (buyerDelayRate !== null &&
+      buyerDelayRate !== undefined &&
+      builderCompensationStr &&
+      typeof builderCompensationStr === "string") ||
+    (buyerDelayRate !== null &&
+      buyerDelayRate !== undefined &&
+      promoterDelayRate !== null &&
+      promoterDelayRate !== undefined &&
+      Number(buyerDelayRate) > Number(promoterDelayRate));
+
+  if (isAsymmetric) {
+    const numBuyer = buyerDelayRate ? Number(buyerDelayRate) : 18;
+    const promoterDesc = builderCompensationStr || `${promoterDelayRate ?? 0}% p.a.`;
+    flags.push(
+      flag(
+        "rera_asymmetric_delay_penalty",
+        "warning",
+        "Asymmetric delay penalty violates RERA Section 18",
+        `Builder charges you ${numBuyer}% p.a. for payment delay but compensates only ${promoterDesc} for construction delay. Under Section 18 of RERA 2016 and State RERA rules, interest payable by the promoter MUST EQUAL interest charged to the allottee (SBI highest MCLR + 2%). Any lower developer compensation clause is statutorily invalid.`
+      )
+    );
+    severity = promoteSeverity(severity, "high");
+  }
+
+  // 3. RERA Section 2(k) Carpet Area vs Super Built-up Loading
+  const carpetArea = contract.rera_carpet_area_sqft ?? contract.carpet_area_sqft;
+  const superArea = contract.super_built_up_area_sqft ?? contract.super_area;
+
+  if (superArea && (!carpetArea || carpetArea === null)) {
+    flags.push(
+      flag(
+        "rera_missing_carpet_area",
+        "warning",
+        "Missing mandatory RERA carpet area disclosure",
+        "Under Section 2(k) of RERA 2016, real estate must be sold strictly on Net Usable Carpet Area. Selling by super built-up area without explicit RERA carpet area disclosure violates statutory disclosure rules and conceals non-usable common space loading."
+      )
+    );
+    severity = promoteSeverity(severity, "medium");
+  } else if (superArea && carpetArea && superArea > carpetArea) {
+    const loadingPct = ((superArea - carpetArea) / carpetArea) * 100;
+    if (loadingPct > 30 || contract.loading_factor_percent > 30) {
+      const displayPct = contract.loading_factor_percent ?? loadingPct.toFixed(1);
+      flags.push(
+        flag(
+          "high_super_area_loading",
+          "info",
+          `High common area loading (${displayPct}%)`,
+          `Your usable RERA carpet area is ${carpetArea} sq.ft. vs super built-up ${superArea} sq.ft. You are paying a ${displayPct}% loading factor for common amenities, corridors, and utility shafts.`
+        )
+      );
+    }
+  }
+
+  // 4. Tripartite Subvention Indemnity Trap
+  const isTripartite =
+    contract.is_tripartite === true ||
+    contract.has_tripartite_subvention_clause === true ||
+    Boolean(contract.subvention_scheme_type);
+  const hasIndemnity =
+    contract.has_subvention_indemnity === true ||
+    contract.has_tripartite_subvention_clause === true ||
+    Boolean(contract.subvention_scheme_type);
+
+  if (isTripartite && hasIndemnity) {
+    flags.push(
+      flag(
+        "subvention_tripartite_indemnity_trap",
+        "warning",
+        "Tripartite bank-builder subvention trap",
+        "You have signed an unconditional borrower indemnity making you solely liable to service bank loan EMIs even if the developer defaults, halts construction work, or enters insolvency proceedings before the NCLT."
+      )
+    );
+    severity = promoteSeverity(severity, "high");
+  }
+
+  return { flags, severity };
+}
+
+// ─── Consumer Finance: Health Insurance Policy Schedules ────────────────────
+
+/**
+ * Run deterministic verification checks on a Health Insurance Policy Schedule.
+ *
+ * @param policy - Extracted health policy details.
+ * @returns Verification result with flags and risk severity.
+ */
+export function verifyInsurancePolicy(policy: Record<string, any>): VerificationResult {
+  const flags: Flag[] = [];
+  let severity: Severity = policy.severity ?? "low";
+
+  const sumInsured = Number(policy.sum_insured_inr ?? policy.sum_insured) || 500000;
+  const roomRentCapPct =
+    policy.room_rent_cap_pct !== null && policy.room_rent_cap_pct !== undefined
+      ? Number(policy.room_rent_cap_pct)
+      : policy.room_rent_limit_percent !== null && policy.room_rent_limit_percent !== undefined
+      ? Number(policy.room_rent_limit_percent)
+      : null;
+  const fixedRoomLimit =
+    policy.daily_room_rent_limit_inr !== null && policy.daily_room_rent_limit_inr !== undefined
+      ? Number(policy.daily_room_rent_limit_inr)
+      : policy.daily_room_rent_limit !== null && policy.daily_room_rent_limit !== undefined
+      ? Number(policy.daily_room_rent_limit)
+      : null;
+
+  // 1. 1% Room Rent Proportionate Deduction Trap
+  const dailyCap = fixedRoomLimit ?? (roomRentCapPct ? (sumInsured * roomRentCapPct) / 100 : null);
+  const isOnePercentOrLess =
+    (roomRentCapPct !== null && roomRentCapPct <= 1.0) ||
+    (dailyCap !== null && dailyCap <= sumInsured * 0.01) ||
+    policy.has_proportionate_deduction === true ||
+    policy.has_proportionate_deduction_clause === true;
+
+  if (isOnePercentOrLess && dailyCap !== null) {
+    const exampleActualRent = Math.round(dailyCap * 2.0); // e.g. 5,000 / 10,000 = 50%
+    const deductionHaircutPct = Math.round((1 - dailyCap / exampleActualRent) * 100);
+
+    flags.push(
+      flag(
+        "room_rent_proportionate_deduction_trap",
+        "warning",
+        `1% Room Rent Proportionate Deduction Trap (₹${dailyCap.toLocaleString("en-IN")}/day cap)`,
+        `Your policy caps daily room rent to 1% of Sum Insured (₹${dailyCap.toLocaleString("en-IN")}/day). If you occupy a room above this limit (e.g. ₹${exampleActualRent.toLocaleString("en-IN")}/day), the insurer applies proportionate deduction: slashing not just the room rent difference, but cutting surgeon fees, operation theatre (OT) charges, anesthetist fees, and nursing charges across the ENTIRE hospital bill by ${deductionHaircutPct}%.`
+      )
+    );
+    severity = promoteSeverity(severity, "critical");
+  }
+
+  // 2. Section 45 Insurance Act: 3-Year Incontestability Moratorium
+  const coverageMonths =
+    policy.continuous_coverage_months !== null && policy.continuous_coverage_months !== undefined
+      ? Number(policy.continuous_coverage_months)
+      : policy.policy_tenure_years
+      ? Number(policy.policy_tenure_years) * 12
+      : policy.policy_tenure_months
+      ? Number(policy.policy_tenure_months)
+      : null;
+
+  const isRepudiated =
+    policy.claim_repudiated === true ||
+    policy.claim_repudiation_threatened === true ||
+    Boolean(policy.repudiation_ground);
+
+  if (coverageMonths !== null && coverageMonths >= 36) {
+    if (isRepudiated) {
+      flags.push(
+        flag(
+          "section_45_illegal_repudiation_risk",
+          "warning",
+          "Illegal claim repudiation under Section 45 Insurance Act",
+          `Your policy has been active continuously for ${coverageMonths} months (over 3 years). Under Section 45 of the Insurance Act 1938, no life or health insurance policy can be repudiated or questioned on any ground including misstatement or non-disclosure after 3 continuous years. This denial is legally challengeable before the Insurance Ombudsman.`
+        )
+      );
+      severity = promoteSeverity(severity, "critical");
+    } else {
+      flags.push(
+        flag(
+          "section_45_moratorium_defense",
+          "info",
+          "Section 45 3-Year Incontestability Protection Active",
+          `With ${coverageMonths} months of continuous coverage, your policy has crossed the statutory 3-year moratorium. Under Section 45 of the Insurance Act 1938, the insurer is legally prohibited from repudiating claims or cancelling coverage on allegations of pre-existing disease non-disclosure.`
+        )
+      );
+    }
+  }
+
+  // 3. ICU Sub-Limit Warning
+  const icuCapPct =
+    policy.icu_rent_cap_pct !== null && policy.icu_rent_cap_pct !== undefined
+      ? Number(policy.icu_rent_cap_pct)
+      : policy.icu_daily_limit && sumInsured
+      ? (Number(policy.icu_daily_limit) / sumInsured) * 100
+      : null;
+
+  if (icuCapPct !== null && icuCapPct <= 2.0) {
+    const dailyIcuCap = policy.icu_daily_limit ? Number(policy.icu_daily_limit) : (sumInsured * icuCapPct) / 100;
+    flags.push(
+      flag(
+        "icu_sublimit_warning",
+        "warning",
+        `ICU daily stay capped to ${icuCapPct}% (₹${dailyIcuCap.toLocaleString("en-IN")}/day)`,
+        `Intensive Care Unit (ICU) expenses are restricted to ₹${dailyIcuCap.toLocaleString("en-IN")} per day. Serious medical emergencies exceeding this cap will trigger out-of-pocket expenses.`
+      )
+    );
+    severity = promoteSeverity(severity, "medium");
   }
 
   return { flags, severity };

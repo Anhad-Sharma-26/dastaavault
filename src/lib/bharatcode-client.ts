@@ -222,7 +222,7 @@ function formatApiError(status: number, rawText: string): string {
   try {
     const parsed = JSON.parse(rawText);
     if (parsed.error?.code === "subscription_required" || parsed.error?.type === "subscription_required") {
-      return "BharatCode API requires an active Lite, Pro, or verified student account for custom uploaded files. To test the full analysis pipeline right now for free, choose any of the 13 sample presets!";
+      return "BharatCode API requires an active Lite, Pro, or verified student account for custom uploaded files. To test the full analysis pipeline right now for free, choose any of our interactive sample presets!";
     }
     if (parsed.error?.message) {
       return `BharatCode API (${status}): ${parsed.error.message}`;

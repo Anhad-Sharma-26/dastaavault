@@ -5,7 +5,7 @@ import React, { useState } from "react";
 export interface DemoDocItem {
   id: string;
   name: string;
-  category: "Tax notice" | "Rent agreement" | "Banking & credit" | "Business & MSME" | "Edge cases";
+  category: "Tax notice" | "Rent agreement" | "Banking & credit" | "Business & MSME" | "Property & RERA" | "Health Insurance" | "Edge cases";
   tag: string;
   highlight: string;
   fileName: string;
@@ -140,6 +140,26 @@ export const DEMO_DOCS: DemoDocItem[] = [
     fileName: "msme-overdue-invoice.html",
   },
 
+  // Property & Real Estate (Wave 3)
+  {
+    id: "property-bba",
+    name: "Builder-Buyer Agreement",
+    category: "Property & RERA",
+    tag: "RERA & GPA Trap",
+    highlight: "18% delay fee vs ₹5/sq.ft compensation, missing carpet area & GPA title clause",
+    fileName: "property-builder-buyer-agreement.html",
+  },
+
+  // Health Insurance (Wave 3)
+  {
+    id: "insurance-health",
+    name: "Health Policy Schedule",
+    category: "Health Insurance",
+    tag: "1% Room Rent Trap",
+    highlight: "1% room rent cap triggering proportionate haircut on OT & surgery, with 4-year Sec 45 defense",
+    fileName: "health-insurance-policy-schedule.html",
+  },
+
   // Edge Cases
   {
     id: "unrelated",
@@ -162,13 +182,15 @@ export function DemoDocPicker({
   selectedDocId,
   disabled,
 }: DemoDocPickerProps) {
-  const [activeTab, setActiveTab] = useState<"tax" | "rent" | "banking" | "msme" | "edge">("tax");
+  const [activeTab, setActiveTab] = useState<"tax" | "rent" | "banking" | "msme" | "property" | "insurance" | "edge">("tax");
 
   const filteredDocs = DEMO_DOCS.filter((d) => {
     if (activeTab === "tax") return d.category === "Tax notice";
     if (activeTab === "rent") return d.category === "Rent agreement";
     if (activeTab === "banking") return d.category === "Banking & credit";
     if (activeTab === "msme") return d.category === "Business & MSME";
+    if (activeTab === "property") return d.category === "Property & RERA";
+    if (activeTab === "insurance") return d.category === "Health Insurance";
     return d.category === "Edge cases";
   });
 
@@ -220,6 +242,28 @@ export function DemoDocPicker({
             }`}
           >
             Business &amp; MSME (2)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("property")}
+            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+              activeTab === "property"
+                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+            }`}
+          >
+            Property &amp; RERA (1)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("insurance")}
+            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+              activeTab === "insurance"
+                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+            }`}
+          >
+            Health Insurance (1)
           </button>
           <button
             type="button"

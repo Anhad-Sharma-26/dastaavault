@@ -378,6 +378,105 @@ export const MSMEInvoiceSchema = z.object({
 
 export type MSMEInvoiceData = z.infer<typeof MSMEInvoiceSchema>;
 
+// ─── Real Estate & Property Conveyance (RERA & Suraj Lamp) ───────────────────
+
+export const PropertyContractSchema = z.object({
+  doc_type: z.literal("property_contract"),
+  agreement_type: z
+    .enum([
+      "builder_buyer_agreement",
+      "sale_deed",
+      "agreement_to_sell",
+      "gpa_transfer",
+      "tripartite_agreement",
+      "allotment_letter",
+      "other",
+    ])
+    .default("builder_buyer_agreement")
+    .describe("Type of property agreement or conveyance"),
+  project_name: z.string().nullish().describe("Name of the real estate project or building"),
+  promoter_or_builder_name: z.string().nullish().describe("Developer, builder, or seller name"),
+  buyer_or_allottee_name: z.string().nullish().describe("Buyer or allottee name"),
+  rera_registration_number: z.string().nullish().describe("RERA project registration number if stated"),
+  total_consideration_inr: z.number().nullish().describe("Total purchase price or consideration in INR"),
+  super_built_up_area_sqft: z.number().nullish().describe("Super built-up area in square feet"),
+  rera_carpet_area_sqft: z.number().nullish().describe("RERA net usable carpet area in square feet"),
+  possession_date: z.string().nullish().describe("Scheduled possession date (YYYY-MM-DD)"),
+  delay_interest_rate_buyer_pct: z
+    .number()
+    .nullish()
+    .describe("Interest rate charged to buyer for installment delay (percent p.a.)"),
+  delay_compensation_rate_promoter_pct: z
+    .number()
+    .nullish()
+    .describe("Compensation or penalty rate payable by builder for possession delay (percent p.a. or per sqft converted)"),
+  is_gpa_or_power_of_attorney_sale: z
+    .boolean()
+    .default(false)
+    .describe("Whether title is transferred via General Power of Attorney (GPA) instead of registered conveyance"),
+  is_tripartite: z
+    .boolean()
+    .default(false)
+    .describe("Whether agreement involves bank, builder, and buyer with subvention indemnity"),
+  has_subvention_indemnity: z
+    .boolean()
+    .default(false)
+    .describe("Whether buyer unconditionally indemnifies bank for loan even if builder halts construction"),
+  severity: z.enum(["critical", "high", "medium", "low"]).default("low"),
+  flags: z.array(FlagSchema).default([]),
+  extraction_confidence: z.enum(["high", "medium", "low"]).default("high"),
+  uncertain_fields: z.array(z.string()).default([]),
+});
+
+export type PropertyContractData = z.infer<typeof PropertyContractSchema>;
+
+// ─── Consumer Finance: Health Insurance Policy Schedules ────────────────────
+
+export const InsurancePolicySchema = z.object({
+  doc_type: z.literal("insurance_policy"),
+  insurer_name: z.string().describe("Name of the health insurance company (e.g. Star Health, HDFC ERGO, Care, Niva Bupa)"),
+  policy_number: z.string().nullish().describe("Insurance policy number"),
+  policy_holder_name: z.string().nullish().describe("Primary insured or proposer name"),
+  policy_type: z
+    .enum(["individual_health", "family_floater", "critical_illness", "group_health", "top_up", "other"])
+    .default("family_floater")
+    .describe("Health insurance plan type"),
+  sum_insured_inr: z.number().nullish().describe("Base sum insured coverage in INR"),
+  policy_start_date: z.string().nullish().describe("Original inception or policy start date (YYYY-MM-DD)"),
+  continuous_coverage_months: z
+    .number()
+    .nullish()
+    .describe("Number of continuous active coverage months without break"),
+  room_rent_cap_pct: z
+    .number()
+    .nullish()
+    .describe("Daily room rent cap percentage of sum insured (e.g. 1.0 for 1%)"),
+  daily_room_rent_limit_inr: z.number().nullish().describe("Fixed daily room rent limit in INR if specified"),
+  icu_rent_cap_pct: z
+    .number()
+    .nullish()
+    .describe("ICU daily room rent cap percentage of sum insured (e.g. 2.0 for 2%)"),
+  has_proportionate_deduction_clause: z
+    .boolean()
+    .default(false)
+    .describe("Whether policy applies proportionate deduction on all associate medical charges if room limit is exceeded"),
+  co_payment_pct: z.number().nullish().describe("Co-payment percentage payable by insured"),
+  claim_repudiated: z
+    .boolean()
+    .default(false)
+    .describe("Whether this document is a claim repudiation / rejection letter"),
+  repudiation_ground: z
+    .string()
+    .nullish()
+    .describe("Reason cited for claim denial (e.g. non-disclosure of pre-existing condition)"),
+  severity: z.enum(["critical", "high", "medium", "low"]).default("low"),
+  flags: z.array(FlagSchema).default([]),
+  extraction_confidence: z.enum(["high", "medium", "low"]).default("high"),
+  uncertain_fields: z.array(z.string()).default([]),
+});
+
+export type InsurancePolicyData = z.infer<typeof InsurancePolicySchema>;
+
 // ─── Classification ──────────────────────────────────────────────────────────
 
 export const ClassificationSchema = z.object({
@@ -389,9 +488,11 @@ export const ClassificationSchema = z.object({
       "loan_sanction",
       "gst_notice",
       "msme_contract",
+      "property_contract",
+      "insurance_policy",
       "unsupported",
     ])
-    .describe("Detected document type across Tax, Property, Banking, and MSME domains"),
+    .describe("Detected document type across Tax, Rent, Banking, MSME, Property, and Insurance domains"),
   is_empty_or_template: z
     .boolean()
     .default(false)
@@ -446,6 +547,16 @@ export const MSMEInvoiceJSONSchema = toJSONSchema(MSMEInvoiceSchema, {
   target: "draft-2020-12",
 });
 
+/** JSON Schema representation of the Property Contract extraction schema. */
+export const PropertyContractJSONSchema = toJSONSchema(PropertyContractSchema, {
+  target: "draft-2020-12",
+});
+
+/** JSON Schema representation of the Insurance Policy extraction schema. */
+export const InsurancePolicyJSONSchema = toJSONSchema(InsurancePolicySchema, {
+  target: "draft-2020-12",
+});
+
 /** JSON Schema representation of the General Document extraction schema. */
 export const GeneralDocJSONSchema = toJSONSchema(GeneralDocSchema, {
   target: "draft-2020-12",
@@ -465,6 +576,8 @@ export {
   LoanSanctionJSONSchema as loanSanctionJsonSchema,
   GSTNoticeJSONSchema as gstNoticeJsonSchema,
   MSMEInvoiceJSONSchema as msmeInvoiceJsonSchema,
+  PropertyContractJSONSchema as propertyContractJsonSchema,
+  InsurancePolicyJSONSchema as insurancePolicyJsonSchema,
   GeneralDocJSONSchema as generalDocJsonSchema,
 };
 
@@ -474,5 +587,7 @@ export type StatutoryForm = StatutoryFormData;
 export type LoanSanction = LoanSanctionData;
 export type GSTNotice = GSTNoticeData;
 export type MSMEInvoice = MSMEInvoiceData;
+export type PropertyContract = PropertyContractData;
+export type InsurancePolicy = InsurancePolicyData;
 export type GeneralDoc = GeneralDocData;
 export type Classification = ClassificationData;
