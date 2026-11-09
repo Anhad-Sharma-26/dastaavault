@@ -59,7 +59,7 @@ export function getFallbackConfig(): {
       provider = "OpenRouter";
     } else if (process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY && !process.env.FALLBACK_API_KEY) {
       baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai";
-      model = model || "gemini-3.5-flash-lite";
+      model = model || "gemini-2.0-flash";
       provider = "Google Gemini";
     } else {
       baseUrl = "https://api.openai.com/v1";
