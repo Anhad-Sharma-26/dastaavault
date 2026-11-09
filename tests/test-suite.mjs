@@ -86,22 +86,22 @@ test("Section Mapping: dataset should be valid and well-formed", () => {
   assert.ok(mappingData.sections.length >= 10);
 });
 
-test("Section Mapping: cross-mapping old 143(1) to new 221(1)", () => {
+test("Section Mapping: cross-mapping old 143(1) to new 270(1)", () => {
   const res = lookupSection("143(1)");
   assert.ok(res, "143(1) lookup succeeded");
-  assert.equal(res.new, "221(1)");
+  assert.equal(res.new, "270(1)");
   assert.equal(res.typical_deadline_days, 30);
 });
 
-test("Section Mapping: cross-mapping old 148 to new 231 (reassessment)", () => {
+test("Section Mapping: cross-mapping old 148 to new 280 (reassessment)", () => {
   const res = lookupSection("148");
   assert.ok(res, "148 entry exists");
-  assert.equal(res.new, "231");
+  assert.equal(res.new, "280");
 });
 
-test("Section Mapping: cross-mapping new 220 to old 142(1)", () => {
-  const res = lookupSection("220");
-  assert.ok(res, "220 entry exists");
+test("Section Mapping: cross-mapping new 268 to old 142(1)", () => {
+  const res = lookupSection("268");
+  assert.ok(res, "268 entry exists");
   assert.equal(res.old, "142(1)");
 });
 

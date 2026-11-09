@@ -45,7 +45,7 @@ export function lookupByOldSection(section: string): SectionEntry | null {
 /**
  * Look up a section by its 2025-Act number.
  *
- * @param section - e.g. "221(1)"
+ * @param section - e.g. "270(1)"
  * @returns The matching entry or `null`.
  */
 export function lookupByNewSection(section: string): SectionEntry | null {

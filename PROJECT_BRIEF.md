@@ -40,7 +40,7 @@ Every day, millions of Indian citizens encounter complex notices, contracts, and
 ```
 
 1. **The Historic Tax Law Overhaul (1 April 2026):**  
-   India replaced the 65-year-old *Income-tax Act, 1961* with the *Income-tax Act, 2025*. Section numbers were comprehensively overhauled (e.g. `143(1)` became `221(1)`, `148` reassessment became `231`). Generic AI models trained on older datasets hallucinate obsolete provisions or fail to cross-map old notices.
+   India replaced the 65-year-old *Income-tax Act, 1961* with the *Income-tax Act, 2025*. Section numbers were comprehensively overhauled under the official ICAI concordance table (e.g. return processing intimation `143(1)` became `270(1)`, inquiry `142(1)` became `268`, reassessment `148` became `280`, and demand notice `156` became `290`; preliminary draft whitepapers had initially sequenced these in the 220s before the final parliamentary enactment). Generic AI models trained on older datasets hallucinate obsolete provisions or fail to cross-map old notices.
 2. **Hidden Banking & Loan Traps:**  
    Lenders frequently charge 2–4% prepayment penalties on floating-rate individual home loans in direct violation of binding RBI Master Directions (`DBOD.No.Dir.BC.107/2011-12`), or omit the mandatory Annual Percentage Rate (APR) from the Key Fact Statement (KFS).
 3. **The 90-Day MSME Credit Trap & Section 43B(h):**  
@@ -120,7 +120,7 @@ To allow judges, voters, and users to evaluate the system with zero quota fricti
 | # | Preset ID | Category | Document Name | Key Statutory Infraction Tested |
 |---|---|---|---|---|
 | 1 | `it-143-1` | Income Tax | Intimation u/s 143(1) (Clean) | TDS mismatch demand extraction of ₹12,450 |
-| 2 | `it-new-act` | Income Tax | Intimation u/s 221(1) | New 2025 Act section corresponding to old 143(1) |
+| 2 | `it-new-act` | Income Tax | Intimation u/s 270(1) | New 2025 Act section corresponding to old 143(1) (ICAI Concordance) |
 | 3 | `it-large-demand`| Income Tax | Demand Notice with Prosecution | ₹3.45L demand + Section 276C prosecution warning |
 | 4 | `it-hindi` | Income Tax | Bilingual Inquiry u/s 142(1) | Hindi & English questionnaire testing multilingual OCR |
 | 5 | `it-old-refund` | Income Tax | 1961 Act Refund Intimation | Assessment Year 2024-25 intimation with ₹8,200 refund |
@@ -134,7 +134,7 @@ To allow judges, voters, and users to evaluate the system with zero quota fricti
 | 13 | `gst-drc01` | Business | Form GST DRC-01 (Sec 74) | 100% fraud penalty + missing hearing u/s 75(4) |
 | 14 | `msme-45day` | Business | MSME Commercial Invoice | 90d clause voided by Sec 15; 19.5% interest & 43B(h) |
 | 15 | `property-bba` | Property | Builder-Buyer Agreement | 18% buyer delay vs ₹5 builder compensation + GPA clause |
-| 16 | `insurance-health`| Insurance | Health Policy Schedule | 1% room rent haircut + Section 45 4-year moratorium |
+| 16 | `insurance-health`| Insurance | Health Policy Schedule | 1% room rent haircut + Section 45 3-year statutory moratorium defense (active policy tenure: 4 years) |
 | 17 | `blurry` | Edge Case | Degraded Mobile Scan Notice | Blurry scan testing confidence fallback meter |
 | 18 | `unrelated` | Edge Case | Electricity Utility Bill | Utility invoice testing safety rejection of unsupported docs |
 

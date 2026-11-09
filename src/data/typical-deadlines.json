@@ -11,35 +11,35 @@
     },
     {
       "section_old": "142(1)",
-      "section_new": "220",
+      "section_new": "268",
       "name": "Inquiry before assessment",
       "typical_days": 15,
       "notes": "Typically 15 days; check the notice for the exact date"
     },
     {
       "section_old": "143(1)",
-      "section_new": "221(1)",
+      "section_new": "270(1)",
       "name": "Intimation — processing of return",
       "typical_days": 30,
       "notes": "30 days to respond if there is a demand or adjustment"
     },
     {
       "section_old": "148",
-      "section_new": "231",
+      "section_new": "280",
       "name": "Notice for reassessment",
       "typical_days": 30,
       "notes": "Typically 30 days; must file return or respond"
     },
     {
       "section_old": "148A",
-      "section_new": "231A",
+      "section_new": "281",
       "name": "Show-cause before reassessment",
       "typical_days": 30,
       "notes": "7 to 30 days depending on case; check the notice"
     },
     {
       "section_old": "156",
-      "section_new": "241",
+      "section_new": "290",
       "name": "Notice of demand",
       "typical_days": 30,
       "notes": "30 days from service of notice to pay demand"

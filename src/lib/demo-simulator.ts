@@ -25,7 +25,7 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
     extracted: {
       doc_type: "income_tax_notice",
       notice_section_printed: "143(1)",
-      notice_section_mapped: "221(1)",
+      notice_section_mapped: "270(1)",
       act_version: "1961",
       notice_type_name: "Intimation u/s 143(1) (Processing of Return)",
       assessment_year: "2025-26",
@@ -49,22 +49,22 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
       uncertain_fields: [],
     },
     explanation: {
-      en: "This is an official intimation under Section 143(1) of the Income-tax Act, 1961 (mapped to Section 221(1) under the new 2025 Act).\n\n• Tax Demand: The CPC has raised a net demand of ₹12,450 because TDS claimed in your return did not match Form 26AS records.\n• Deadline: You have until 14 November 2026 (7 days remaining) to pay or file an online rectification request u/s 154.\n• Authenticity: Verified with valid Document Identification Number (DIN).\n\nAction required: If your TDS credit was valid, request your employer/deductor to file a revised TDS return, then submit a rectification online.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or tax advice. Please consult a qualified professional for decisions.",
-      hi: "यह आयकर अधिनियम 1961 की धारा 143(1) (नए 2025 अधिनियम में धारा 221(1)) के तहत सूचना है।\n\n• कर मांग: फॉर्म 26AS में ₹12,450 की टीडीएस विसंगति के कारण मांग निकाली गई है।\n• अंतिम तिथि: आपको 14 नवंबर 2026 तक भुगतान या ई-फाइलिंग पोर्टल पर सुधार आवेदन (धारा 154) जमा करना होगा।\n• सत्यापन: वैध डीआईएन (DIN) संख्या दर्ज है।\n\n⚖️ यह सारांश केवल सूचना के लिए है। यह कानूनी या कर सलाह नहीं है।",
-      hinglish: "Yeh Section 143(1) ka Income Tax intimation notice hai (naye 2025 Act mein Section 221(1)).\n\n• Tax Demand: Form 26AS aur return mein TDS mismatch ki wajah se ₹12,450 ki net demand aayi hai.\n• Deadline: Response ya payment 14 November 2026 tak karni hai (7 days bache hain).\n• Authenticity: Valid DIN number document par verified hai.\n\n⚖️ Yeh summary informational guidance ke liye hai, legal ya tax advice nahi hai.",
+      en: "This is an official intimation under Section 143(1) of the Income-tax Act, 1961 (mapped to Section 270(1) under the new 2025 Act per official ICAI concordance mapping).\n\n• Tax Demand: The CPC has raised a net demand of ₹12,450 because TDS claimed in your return did not match Form 26AS records.\n• Deadline: You have until 14 November 2026 (7 days remaining) to pay or file an online rectification request u/s 154.\n• Authenticity: Verified with valid Document Identification Number (DIN).\n\nAction required: If your TDS credit was valid, request your employer/deductor to file a revised TDS return, then submit a rectification online.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or tax advice. Please consult a qualified professional for decisions.",
+      hi: "यह आयकर अधिनियम 1961 की धारा 143(1) (नए 2025 अधिनियम में धारा 270(1)) के तहत सूचना है।\n\n• कर मांग: फॉर्म 26AS में ₹12,450 की टीडीएस विसंगति के कारण मांग निकाली गई है।\n• अंतिम तिथि: आपको 14 नवंबर 2026 तक भुगतान या ई-फाइलिंग पोर्टल पर सुधार आवेदन (धारा 154) जमा करना होगा।\n• सत्यापन: वैध डीआईएन (DIN) संख्या दर्ज है।\n\n⚖️ यह सारांश केवल सूचना के लिए है। यह कानूनी या कर सलाह नहीं है।",
+      hinglish: "Yeh Section 143(1) ka Income Tax intimation notice hai (naye 2025 Act mein Section 270(1) per ICAI concordance table).\n\n• Tax Demand: Form 26AS aur return mein TDS mismatch ki wajah se ₹12,450 ki net demand aayi hai.\n• Deadline: Response ya payment 14 November 2026 tak karni hai (7 days bache hain).\n• Authenticity: Valid DIN number document par verified hai.\n\n⚖️ Yeh summary informational guidance ke liye hai, legal ya tax advice nahi hai.",
     },
   },
 
   // 2. IT Notice New Section (2025 Act)
   "it-new-act": {
     doc_type: "income_tax_notice",
-    transcription: "INCOME TAX DEPARTMENT, GOVERNMENT OF INDIA\nCentralized Processing Centre (CPC 2.0)\nINTIMATION UNDER SECTION 221(1) OF THE INCOME TAX ACT, 2025\nPAN: JKLMN3456Q | AY: 2026-27 | Date: 15/10/2026\nDIN: CPC/2627/2211/4491023812\nUnreported bank interest: ₹60,000 | Tax & interest adjustment: ₹22,100\nNet Demand: ₹22,100 payable within 30 days (by 2026-11-14).",
+    transcription: "INCOME TAX DEPARTMENT, GOVERNMENT OF INDIA\nCentralized Processing Centre (CPC 2.0)\nINTIMATION UNDER SECTION 270(1) OF THE INCOME TAX ACT, 2025\nPAN: JKLMN3456Q | AY: 2026-27 | Date: 15/10/2026\nDIN: CPC/2627/2701/4491023812\nUnreported bank interest: ₹60,000 | Tax & interest adjustment: ₹22,100\nNet Demand: ₹22,100 payable within 30 days (by 2026-11-14).",
     extracted: {
       doc_type: "income_tax_notice",
-      notice_section_printed: "221(1)",
+      notice_section_printed: "270(1)",
       notice_section_mapped: "143(1)",
       act_version: "2025",
-      notice_type_name: "Intimation u/s 221(1) (Income Tax Act 2025)",
+      notice_type_name: "Intimation u/s 270(1) (Income Tax Act 2025)",
       assessment_year: "2026-27",
       pan_masked: "JKLM****Q",
       demand_amount: 22100,
@@ -75,7 +75,7 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
       response_deadline_source: "verbatim",
       days_remaining: 7,
       issuing_authority: "CPC 2.0 Bengaluru",
-      din_number: "CPC/2627/2211/4491023812",
+      din_number: "CPC/2627/2701/4491023812",
       key_claims: [
         "Unreported savings/FD interest of ₹60,000 added from AIS",
         "Tax adjustment ₹12,000 + interest u/s 352/353 ₹10,100",
@@ -86,9 +86,9 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
       uncertain_fields: [],
     },
     explanation: {
-      en: "This intimation is issued under Section 221(1) of the new Income Tax Act, 2025 (which replaced Section 143(1) of the 1961 Act on 1 April 2026).\n\n• Assessment Year: 2026-27 (the inaugural assessment year under the new statute).\n• Adjustment: Bank interest income of ₹60,000 from Annual Information Statement was added, resulting in a net tax demand of ₹22,100.\n• Response Window: Due by 14 November 2026.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or tax advice.",
-      hi: "यह नए आयकर अधिनियम 2025 की धारा 221(1) के तहत जारी सूचना है (जो पूर्व में धारा 143(1) थी)।\n\n• समायोजन: बैंक ब्याज से ₹60,000 की अघोषित आय जोड़ने के बाद ₹22,100 की कर मांग निकली है।\n• अंतिम तिथि: 14 नवंबर 2026 तक भुगतान या आपत्ति दर्ज करें।\n\n⚖️ यह केवल सूचनात्मक सारांश है।",
-      hinglish: "Yeh new Income Tax Act 2025 ke Section 221(1) ke under notice hai (purane Act mein Section 143(1)).\n\n• AY 2026-27: Naye statute ka pehla assessment year.\n• Adjustment: AIS se match karke ₹60,000 interest add kiya gaya hai, total demand ₹22,100 bani hai.\n\n⚖️ Informational summary only, not legal advice.",
+      en: "This intimation is issued under Section 270(1) of the new Income Tax Act, 2025 (which replaced Section 143(1) of the 1961 Act on 1 April 2026 per official ICAI concordance table).\n\n• Assessment Year: 2026-27 (the inaugural assessment year under the new statute).\n• Adjustment: Bank interest income of ₹60,000 from Annual Information Statement was added, resulting in a net tax demand of ₹22,100.\n• Response Window: Due by 14 November 2026.\n\n⚖️ This is an AI-generated summary for informational purposes only. It is NOT legal or tax advice.",
+      hi: "यह नए आयकर अधिनियम 2025 की धारा 270(1) के तहत जारी सूचना है (जो पूर्व में धारा 143(1) थी)।\n\n• समायोजन: बैंक ब्याज से ₹60,000 की अघोषित आय जोड़ने के बाद ₹22,100 की कर मांग निकली है।\n• अंतिम तिथि: 14 नवंबर 2026 तक भुगतान या आपत्ति दर्ज करें।\n\n⚖️ यह केवल सूचनात्मक सारांश है।",
+      hinglish: "Yeh new Income Tax Act 2025 ke Section 270(1) ke under notice hai (purane Act mein Section 143(1) per ICAI mapping).\n\n• AY 2026-27: Naye statute ka pehla assessment year.\n• Adjustment: AIS se match karke ₹60,000 interest add kiya gaya hai, total demand ₹22,100 bani hai.\n\n⚖️ Informational summary only, not legal advice.",
     },
   },
 
@@ -405,7 +405,7 @@ export const DEMO_SIMULATIONS: Record<string, SimulatedDocResult> = {
     extracted: {
       doc_type: "income_tax_notice",
       notice_section_printed: "143(1)",
-      notice_section_mapped: "221(1)",
+      notice_section_mapped: "270(1)",
       act_version: "1961",
       notice_type_name: "Intimation u/s 143(1) (Refund Notice)",
       assessment_year: "2022-23",

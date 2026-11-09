@@ -18,7 +18,7 @@
 ## ⚡ The Problem: The Indian Contract & Statutory Anxiety
 
 Every day, millions of Indian citizens, homeowners, MSME suppliers, borrowers, and patients sign documents or receive official notices they cannot decipher:
-1. **The Historic Tax Law Overhaul (1 April 2026):** India replaced the historic *Income Tax Act, 1961* with the *Income Tax Act, 2025*, comprehensively renumbering hundreds of statutory sections (e.g., standard intimation `143(1)` became `221(1)`, reassessments `148` became `231`). Generic LLMs hallucinate obsolete provisions or fail to cross-map old notices against the new framework.
+1. **The Historic Tax Law Overhaul (1 April 2026):** India replaced the historic *Income Tax Act, 1961* with the *Income Tax Act, 2025*, comprehensively renumbering hundreds of statutory sections (e.g., standard return intimation `143(1)` became `270(1)`, reassessments `148` became `280` under the official ICAI concordance table; preliminary draft whitepapers had initially sequenced these in the 220s). Generic LLMs hallucinate obsolete provisions or fail to cross-map old notices against the new framework.
 2. **Hidden Foreclosure Penalties & Omitted APR:** Lenders routinely slip illegal 2–4% prepayment penalties on floating-rate individual loans in violation of RBI Master Directions, or omit the mandatory Annual Percentage Rate (APR) from the Key Fact Statement (KFS).
 3. **The 90-Day MSME Credit Trap & Section 43B(h):** Buyers impose 60 to 120-day payment terms on small vendors. Under Section 15 of the MSMED Act, statutory credit is capped at 45 days. Unpaid invoices subject buyers to complete tax disallowance under Section 43B(h) and 3x RBI compound penal interest.
 4. **GST Show Cause Notices (Section 74 vs 73):** Officers frequently invoke Section 74 (alleging fraud or willful suppression) rather than Section 73 (general error), triggering an automatic 100% penalty and frequently omitting the mandatory personal hearing required by Section 75(4).
@@ -110,7 +110,7 @@ Judges and voters can test the entire pipeline in 1 click across all 7 categorie
 | # | Preset Document | Domain | Key Statutory Feature Tested |
 |---|---|---|---|
 | 1 | `it-notice-143-1-clean.html` | Income Tax | TDS mismatch demand extraction of ₹12,450 |
-| 2 | `it-notice-new-section.html` | Income Tax | Section 221(1) under new 2025 Act (mapped from 143(1)) |
+| 2 | `it-notice-new-section.html` | Income Tax | Section 270(1) under new 2025 Act (mapped from 143(1) via ICAI Concordance) |
 | 3 | `it-notice-large-demand.html` | Income Tax | High-stakes ₹3.45L demand + Section 276C prosecution warning |
 | 4 | `it-notice-hindi-bilingual.html` | Income Tax | Bilingual section 142(1) inquiry in Hindi & English |
 | 5 | `it-notice-old-section.html` | Income Tax | 1961 Act notice with ₹8,200 direct refund confirmation |
@@ -125,7 +125,7 @@ Judges and voters can test the entire pipeline in 1 click across all 7 categorie
 | 14 | `gst-drc01-notice.html` | Business & GST | Section 74 fraud SCN (100% penalty) + missing hearing u/s 75(4) |
 | 15 | `msme-overdue-invoice.html` | Business & MSME | 90-day term voided by Sec 15 with 19.5% penal interest & 43B(h) risk |
 | 16 | `property-builder-buyer-agreement.html` | Property & RERA | 18% buyer delay vs ₹5/sq.ft. builder compensation + Suraj Lamp GPA clause |
-| 17 | `health-insurance-policy-schedule.html` | Health Insurance | 1% room rent haircut on surgery/OT + Section 45 4-year moratorium shield |
+| 17 | `health-insurance-policy-schedule.html` | Health Insurance | 1% room rent haircut on surgery/OT + Section 45 3-year statutory moratorium defense (active policy tenure: 4 years) |
 | 18 | `unrelated-doc.html` | Edge Case | Electricity utility bill testing unsupported safety rejection |
 
 ---

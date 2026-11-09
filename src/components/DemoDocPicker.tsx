@@ -23,10 +23,10 @@ export const DEMO_DOCS: DemoDocItem[] = [
   },
   {
     id: "it-new-act",
-    name: "New Act Intimation u/s 221(1)",
+    name: "New Act Intimation u/s 270(1)",
     category: "Tax notice",
     tag: "2025 Act",
-    highlight: "Section 221(1) issued under new tax law replacing Section 143(1)",
+    highlight: "Section 270(1) issued under new tax law replacing Section 143(1) (ICAI Concordance)",
     fileName: "it-notice-new-section.html",
   },
   {
@@ -156,7 +156,7 @@ export const DEMO_DOCS: DemoDocItem[] = [
     name: "Health Policy Schedule",
     category: "Health Insurance",
     tag: "1% Room Rent Trap",
-    highlight: "1% room rent cap triggering proportionate haircut on OT & surgery, with 4-year Sec 45 defense",
+    highlight: "1% room rent cap triggering proportionate haircut on OT & surgery, with Sec 45 3-year statutory moratorium defense (4-year policy tenure)",
     fileName: "health-insurance-policy-schedule.html",
   },
 
