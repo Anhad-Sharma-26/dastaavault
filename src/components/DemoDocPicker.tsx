@@ -196,95 +196,97 @@ export function DemoDocPicker({
 
   return (
     <div className="space-y-3">
-      {/* Segmented Category Tabs */}
-      <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-[var(--color-rule)]">
-        <div className="flex items-center gap-1 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)] flex-wrap">
-          <button
-            type="button"
-            onClick={() => setActiveTab("tax")}
-            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
-              activeTab === "tax"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
-                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            Income tax (7)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("rent")}
-            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
-              activeTab === "rent"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
-                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            Rent (5)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("banking")}
-            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
-              activeTab === "banking"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
-                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            Banking &amp; Loans (1)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("msme")}
-            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
-              activeTab === "msme"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
-                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            Business &amp; MSME (2)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("property")}
-            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
-              activeTab === "property"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
-                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            Property &amp; RERA (1)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("insurance")}
-            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
-              activeTab === "insurance"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
-                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            Health Insurance (1)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("edge")}
-            className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
-              activeTab === "edge"
-                ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
-                : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            Edge cases (1)
-          </button>
+      {/* Segmented Category Tabs with Smooth Touch Scroller */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[var(--color-rule)]">
+        <div className="w-full overflow-x-auto pb-1.5 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] touch-pan-x -mx-0.5 px-0.5">
+          <div className="inline-flex items-center gap-1 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)] min-w-max">
+            <button
+              type="button"
+              onClick={() => setActiveTab("tax")}
+              className={`shrink-0 px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                activeTab === "tax"
+                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+              }`}
+            >
+              Income tax (7)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("rent")}
+              className={`shrink-0 px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                activeTab === "rent"
+                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+              }`}
+            >
+              Rent (5)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("banking")}
+              className={`shrink-0 px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                activeTab === "banking"
+                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+              }`}
+            >
+              Banking &amp; Loans (1)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("msme")}
+              className={`shrink-0 px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                activeTab === "msme"
+                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+              }`}
+            >
+              Business &amp; MSME (2)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("property")}
+              className={`shrink-0 px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                activeTab === "property"
+                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+              }`}
+            >
+              Property &amp; RERA (1)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("insurance")}
+              className={`shrink-0 px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                activeTab === "insurance"
+                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+              }`}
+            >
+              Health Insurance (1)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("edge")}
+              className={`shrink-0 px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                activeTab === "edge"
+                  ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+              }`}
+            >
+              Edge cases (1)
+            </button>
+          </div>
         </div>
 
-        <span className="text-[11px] font-mono text-[var(--color-muted)] hidden sm:inline">
+        <span className="text-[11px] font-mono text-[var(--color-muted)] hidden lg:inline shrink-0">
           Click any preset to inspect instant ground-truth analysis
         </span>
       </div>
 
       {/* Preset Documents Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
         {filteredDocs.map((doc) => {
           const isSelected = selectedDocId === doc.id;
           return (
@@ -293,21 +295,21 @@ export function DemoDocPicker({
               type="button"
               disabled={disabled}
               onClick={() => onSelectDoc(doc)}
-              className={`p-3 rounded-[var(--radius-input)] border text-left transition-colors relative focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
+              className={`p-2.5 sm:p-3 rounded-[var(--radius-input)] border text-left transition-colors relative min-w-0 focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
                 isSelected
                   ? "bg-[var(--color-paper-2)] border-[var(--color-ink)] shadow-xs"
                   : "bg-[var(--color-cotton)] border-[var(--color-rule)] hover:border-[var(--color-rule-2)] hover:bg-[var(--color-paper-2)]"
               } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
             >
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <span className="font-semibold text-xs text-[var(--color-ink)] truncate">
+              <div className="flex items-center justify-between gap-1.5 mb-1 min-w-0">
+                <span className="font-semibold text-xs text-[var(--color-ink)] truncate min-w-0">
                   {doc.name}
                 </span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--color-paper-3)] border border-[var(--color-rule)] text-[var(--color-ink-2)] shrink-0">
                   {doc.tag}
                 </span>
               </div>
-              <p className="text-[11px] text-[var(--color-muted)] line-clamp-2 leading-relaxed">
+              <p className="text-[11px] text-[var(--color-muted)] line-clamp-2 leading-relaxed break-words">
                 {doc.highlight}
               </p>
             </button>

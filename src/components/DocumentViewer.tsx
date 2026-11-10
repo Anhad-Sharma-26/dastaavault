@@ -17,18 +17,18 @@ export function DocumentViewer({
   const sim = selectedDemoId ? DEMO_SIMULATIONS[selectedDemoId] : null;
 
   return (
-    <div className="stationery-sheet p-5 sm:p-6 space-y-4 flex flex-col justify-between">
+    <div className="stationery-sheet p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 flex flex-col justify-between">
       {/* Document Sheet Header */}
-      <div className="space-y-1.5 pb-4 border-b border-[var(--color-rule)]">
+      <div className="space-y-1.5 pb-3 sm:pb-4 border-b border-[var(--color-rule)]">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-accent-2)]"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-accent-2)] shrink-0"></span>
             <span className="font-semibold text-xs text-[var(--color-ink)]">
               Your document
             </span>
           </div>
 
-          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-muted)]">
+          <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-muted)] shrink-0">
             {uploadedImageBase64 && !selectedDemoId
               ? "Uploaded file"
               : selectedDemoId
@@ -37,7 +37,7 @@ export function DocumentViewer({
           </span>
         </div>
 
-        <p className="text-xs text-[var(--color-muted)]">
+        <p className="text-xs text-[var(--color-muted)] break-words">
           {uploadedDocName
             ? `Active inspection: ${uploadedDocName}`
             : "Pick a sample document above or upload your own file to begin."}
@@ -47,13 +47,13 @@ export function DocumentViewer({
       {/* Document Body / Single Preview Desk */}
       <div className="flex-1 flex flex-col justify-center">
         {selectedDemoId && sim ? (
-          <div className="rounded-[var(--radius-input)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] p-4 sm:p-5 font-mono text-xs text-[var(--color-ink)] space-y-3 leading-relaxed shadow-xs">
-            <div className="flex items-center justify-between pb-2 border-b border-[var(--color-rule-2)] text-[11px] text-[var(--color-muted)]">
+          <div className="rounded-[var(--radius-input)] bg-[var(--color-paper-2)] border border-[var(--color-rule)] p-3 sm:p-4 font-mono text-xs text-[var(--color-ink)] space-y-2.5 sm:space-y-3 leading-relaxed shadow-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--color-rule-2)] text-[10px] sm:text-[11px] text-[var(--color-muted)]">
               <span>Text from document</span>
               <span>Local preview</span>
             </div>
 
-            <div className="whitespace-pre-wrap font-mono text-[11px] sm:text-xs text-[var(--color-ink-2)] bg-[var(--color-cotton)] p-3.5 rounded border border-[var(--color-rule)] max-h-[380px] overflow-y-auto">
+            <div className="whitespace-pre-wrap break-words font-mono text-[11px] sm:text-xs text-[var(--color-ink-2)] bg-[var(--color-cotton)] p-3 sm:p-3.5 rounded border border-[var(--color-rule)] max-h-[380px] overflow-y-auto">
               {sim.transcription}
             </div>
 

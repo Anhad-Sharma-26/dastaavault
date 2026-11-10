@@ -43,16 +43,16 @@ export function SafetyBanner({
   }
 
   return (
-    <div className="rounded-[var(--radius-input)] bg-[var(--color-cotton)] border border-[var(--color-rule)] p-3 text-xs text-[var(--color-muted)] flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-[11px] text-[var(--color-ink-2)] bg-[var(--color-paper-2)] px-2 py-0.5 rounded border border-[var(--color-rule)]">
+    <div className="rounded-[var(--radius-input)] bg-[var(--color-cotton)] border border-[var(--color-rule)] p-2.5 sm:p-3 text-xs text-[var(--color-muted)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+      <div className="flex items-start gap-2">
+        <span className="font-mono text-[10px] sm:text-[11px] text-[var(--color-ink-2)] bg-[var(--color-paper-2)] px-1.5 sm:px-2 py-0.5 rounded border border-[var(--color-rule)] shrink-0 mt-0.5">
           PRIVACY SANDBOX
         </span>
-        <span>
+        <span className="text-[11px] sm:text-xs leading-relaxed">
           PAN, Aadhaar, and phone numbers are masked locally before inference. No documents are logged or retained.
         </span>
       </div>
-      <span className="font-mono text-[11px] text-[var(--color-muted)]">
+      <span className="font-mono text-[10px] sm:text-[11px] text-[var(--color-muted)] shrink-0 self-end sm:self-auto">
         Rate limit: 15 req / 5 min
       </span>
     </div>

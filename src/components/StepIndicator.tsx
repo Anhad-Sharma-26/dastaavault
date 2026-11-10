@@ -26,12 +26,12 @@ export function StepIndicator({
   }
 
   return (
-    <div className="bg-[var(--color-cotton)] border border-[var(--color-rule)] rounded-[var(--radius-card)] p-4 space-y-3">
+    <div className="bg-[var(--color-cotton)] border border-[var(--color-rule)] rounded-[var(--radius-card)] p-3 sm:p-4 space-y-2.5 sm:space-y-3">
       <div className="flex items-center justify-between text-xs">
         <span className="font-semibold text-[var(--color-ink)]">
           Review progress
         </span>
-        <span className="font-mono text-[11px] text-[var(--color-muted)]">
+        <span className="font-mono text-[10px] sm:text-[11px] text-[var(--color-muted)]">
           {error
             ? "Halted"
             : isComplete
@@ -40,7 +40,7 @@ export function StepIndicator({
         </span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2">
         {STEPS.map((step) => {
           const isDone = isComplete || currentStep > step.id;
           const isCurrent = !isComplete && currentStep === step.id;
@@ -63,7 +63,9 @@ export function StepIndicator({
           return (
             <div
               key={step.id}
-              className={`p-2.5 rounded-[var(--radius-input)] border text-left transition-colors ${cardStyle}`}
+              className={`p-2 sm:p-2.5 rounded-[var(--radius-input)] border text-left transition-colors min-w-0 ${cardStyle} ${
+                step.id === 5 ? "col-span-2 sm:col-span-1" : ""
+              }`}
             >
               <div className="flex items-center justify-between text-[10px] font-mono mb-1">
                 <span>0{step.id}</span>

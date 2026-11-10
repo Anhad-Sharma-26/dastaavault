@@ -328,30 +328,30 @@ export function ActionChecklist({
   const completedCount = items.filter((item) => checkedIds.has(item.id)).length;
 
   return (
-    <div className="stationery-sheet p-6 space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-[var(--color-rule)]">
+    <div className="stationery-sheet p-3.5 sm:p-5 space-y-3.5 sm:space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[var(--color-rule)]">
         <div>
-          <h3 className="text-base font-semibold text-[var(--color-ink)]">
+          <h3 className="text-sm sm:text-base font-semibold text-[var(--color-ink)]">
             Recommended next steps
           </h3>
-          <p className="text-[11px] text-[var(--color-muted)]">
+          <p className="text-[10px] sm:text-[11px] text-[var(--color-muted)]">
             Things you should do to handle this document on time
           </p>
         </div>
 
-        <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-ink-2)]">
+        <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-ink-2)] self-start sm:self-auto shrink-0">
           {completedCount} of {items.length} done
         </span>
       </div>
 
-      <div className="space-y-2.5">
+      <div className="space-y-2 sm:space-y-2.5">
         {items.map((item) => {
           const isChecked = checkedIds.has(item.id);
           return (
             <div
               key={item.id}
               onClick={() => toggleCheck(item.id)}
-              className={`p-3 rounded-[var(--radius-input)] border text-xs cursor-pointer transition-colors flex items-start gap-3 ${
+              className={`p-2.5 sm:p-3 rounded-[var(--radius-input)] border text-xs cursor-pointer transition-colors flex items-start gap-2.5 sm:gap-3 ${
                 isChecked
                   ? "bg-[var(--color-paper-2)] border-[var(--color-rule)] opacity-70"
                   : "bg-[var(--color-cotton)] border-[var(--color-rule)] hover:border-[var(--color-rule-2)]"

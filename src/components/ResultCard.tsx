@@ -143,12 +143,12 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
   const mappedSection = data.notice_section_mapped;
 
   return (
-    <div className="stationery-sheet p-6 space-y-6">
+    <div className="stationery-sheet p-3.5 sm:p-5 md:p-6 space-y-4 sm:space-y-6">
       {/* Top Bar with Document Name and Status Stamp */}
-      <div className="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-[var(--color-rule)]">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-muted)]">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 sm:pb-5 border-b border-[var(--color-rule)]">
+        <div className="space-y-1 min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-[var(--color-muted)] shrink-0">
               {isTax
                 ? "Income Tax"
                 : isRent
@@ -279,20 +279,20 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
         </div>
 
         {/* Letterpress Stamp */}
-        <div className={`px-3 py-1.5 rounded-[var(--radius-input)] border font-mono font-semibold text-xs tracking-tight shadow-xs ${getStampColor()}`}>
+        <div className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-[var(--radius-input)] border font-mono font-semibold text-[11px] sm:text-xs tracking-tight shadow-xs self-start sm:self-auto shrink-0 ${getStampColor()}`}>
           {getStampText()}
         </div>
       </div>
 
       {/* Statutory Section Concordance Card (1961 Act ↔ 2025 Act) */}
       {(isTax || isForm) && printedSection && (
-        <div className="letterpress-card p-4 space-y-2 text-xs">
-          <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
+        <div className="letterpress-card p-3 sm:p-4 space-y-2 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] sm:text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
             <span>Statutory section breakdown (Old vs New Law)</span>
             <span>Official ICAI mapping</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-1">
             <div className="space-y-0.5">
               <span className="text-[11px] text-[var(--color-muted)]">Section printed on your document:</span>
               <p className="font-mono font-semibold text-sm text-[var(--color-ink)]">
@@ -316,13 +316,13 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
 
       {/* Banking & Credit Statutory Safeguards Card */}
       {isLoan && (
-        <div className="letterpress-card p-4 space-y-2 text-xs">
-          <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
+        <div className="letterpress-card p-3 sm:p-4 space-y-2 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] sm:text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
             <span>RBI Consumer Protection Safeguards</span>
             <span>Master Directions &amp; Circulars</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-1">
             <div className="space-y-0.5">
               <span className="text-[11px] text-[var(--color-muted)]">Foreclosure Penalty:</span>
               <p className="font-mono font-semibold text-xs text-[var(--color-ink)]">
@@ -353,13 +353,13 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
 
       {/* GST Legal Defense Framework Card */}
       {isGST && (
-        <div className="letterpress-card p-4 space-y-2 text-xs">
-          <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
+        <div className="letterpress-card p-3 sm:p-4 space-y-2 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] sm:text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
             <span>CGST Act Statutory Defense Framework</span>
             <span>Sections 73, 74 &amp; 75(4)</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-1">
             <div className="space-y-0.5">
               <span className="text-[11px] text-[var(--color-muted)]">Governing Section:</span>
               <p className="font-mono font-semibold text-xs text-[var(--color-ink)]">
@@ -390,13 +390,13 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
 
       {/* MSME & Income Tax Section 43B(h) Protections Card */}
       {isMSME && (
-        <div className="letterpress-card p-4 space-y-2 text-xs">
-          <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
+        <div className="letterpress-card p-3 sm:p-4 space-y-2 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] sm:text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
             <span>MSMED Act 2006 &amp; Section 43B(h) Protections</span>
             <span>Statutory Commercial Moat</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-1">
             <div className="space-y-0.5">
               <span className="text-[11px] text-[var(--color-muted)]">Max Credit Window:</span>
               <p className="font-mono font-semibold text-xs text-[var(--color-ink)]">
@@ -427,13 +427,13 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
 
       {/* RERA & Property Conveyance Safeguards Card */}
       {isProperty && (
-        <div className="letterpress-card p-4 space-y-2 text-xs">
-          <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
+        <div className="letterpress-card p-3 sm:p-4 space-y-2 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] sm:text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
             <span>RERA 2016 &amp; Supreme Court Conveyance Protections</span>
             <span>Section 18, Rule 15 &amp; Suraj Lamp</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-1">
             <div className="space-y-0.5">
               <span className="text-[11px] text-[var(--color-muted)]">Title Conveyance Rule:</span>
               <p className="font-mono font-semibold text-xs text-[var(--color-ink)]">
@@ -464,13 +464,13 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
 
       {/* Health Insurance & Section 45 Safeguards Card */}
       {isInsurance && (
-        <div className="letterpress-card p-4 space-y-2 text-xs">
-          <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
+        <div className="letterpress-card p-3 sm:p-4 space-y-2 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] sm:text-[11px] font-mono text-[var(--color-muted)] pb-1 border-b border-[var(--color-rule)]">
             <span>Insurance Act 1938 &amp; IRDAI Safeguards</span>
             <span>Section 45 &amp; Room Rent Haircut Rules</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-1">
             <div className="space-y-0.5">
               <span className="text-[11px] text-[var(--color-muted)]">3-Year Incontestability:</span>
               <p className="font-mono font-semibold text-xs text-[var(--color-ink)]">
@@ -500,7 +500,7 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
       )}
 
       {/* 4-Metric Key Figures Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {/* Metric 1: Financial Amount */}
         <div className="letterpress-card p-3 space-y-1">
           <span className="text-[11px] text-[var(--color-muted)] font-mono">
@@ -524,7 +524,7 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? "Monthly rent"
               : "Amount recorded"}
           </span>
-          <p className="font-mono font-semibold text-base sm:text-lg text-[var(--color-ink)]">
+          <p className="font-mono font-semibold text-sm sm:text-base lg:text-lg text-[var(--color-ink)] break-words">
             {isLoan ? (
               data.sanctioned_amount ? (
                 `₹${data.sanctioned_amount.toLocaleString("en-IN")}`
@@ -631,7 +631,7 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? "Notice period"
               : "Due date"}
           </span>
-          <p className="font-mono font-semibold text-base sm:text-lg text-[var(--color-ink)] truncate">
+          <p className="font-mono font-semibold text-sm sm:text-base lg:text-lg text-[var(--color-ink)] truncate">
             {isLoan ? (
               data.annualized_percentage_rate ? (
                 `APR ${data.annualized_percentage_rate}%`
@@ -726,7 +726,7 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
               ? "Tenure"
               : "Authority"}
           </span>
-          <p className="font-mono font-semibold text-sm sm:text-base text-[var(--color-ink)] truncate">
+          <p className="font-mono font-semibold text-xs sm:text-sm lg:text-base text-[var(--color-ink)] truncate">
             {isLoan ? (
               data.tenure_months ? (
                 `${data.tenure_months} months`
@@ -803,7 +803,7 @@ export function ResultCard({ docType, data, flags, severity }: ResultCardProps) 
           <span className="text-[11px] text-[var(--color-muted)] font-mono">
             Risk rating
           </span>
-          <p className="font-mono font-semibold text-base sm:text-lg text-[var(--color-ink)] capitalize">
+          <p className="font-mono font-semibold text-sm sm:text-base lg:text-lg text-[var(--color-ink)] capitalize">
             {isForm && isBlank
               ? "Informational"
               : severity === "critical"

@@ -167,11 +167,11 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--color-paper)] text-[var(--color-ink)] flex flex-col font-sans">
       <Header />
 
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-6 sm:px-10 py-8 space-y-6">
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-3.5 sm:px-6 md:px-10 py-5 sm:py-8 space-y-4 sm:space-y-6">
         {/* Editorial Hero Bar */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--color-ink)]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4 pb-1 sm:pb-2">
+          <div className="space-y-1 sm:space-y-1.5">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--color-ink)] max-w-none">
               Decode Indian legal notices, loans, and commercial contracts.
             </h1>
             <p className="text-xs sm:text-sm text-[var(--color-muted)] max-w-2xl leading-relaxed">
@@ -179,12 +179,12 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--color-muted)] shrink-0">
-            <span>18 test presets</span>
-            <span>·</span>
-            <span>ICAI 1961 ↔ 2025 Act</span>
-            <span>·</span>
-            <span>RBI / MSMED / RERA / IRDAI</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] sm:text-[11px] text-[var(--color-muted)] shrink-0">
+            <span className="whitespace-nowrap">18 test presets</span>
+            <span className="text-[var(--color-rule-2)] hidden sm:inline">·</span>
+            <span className="whitespace-nowrap">ICAI 1961 ↔ 2025 Act</span>
+            <span className="text-[var(--color-rule-2)] hidden sm:inline">·</span>
+            <span className="whitespace-nowrap">RBI / MSMED / RERA / IRDAI</span>
           </div>
         </div>
 
@@ -195,13 +195,13 @@ export default function Home() {
         />
 
         {/* Source Mode Toggle: Preset Documents vs Custom Upload */}
-        <div className="stationery-sheet p-5 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-[var(--color-rule)]">
-            <div className="flex items-center gap-1.5 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)]">
+        <div className="stationery-sheet p-3.5 sm:p-5 space-y-3.5 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-3 border-b border-[var(--color-rule)]">
+            <div className="grid grid-cols-2 sm:flex items-center gap-1 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)] w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setSourceMode("preset")}
-                className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-semibold transition-colors text-center whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
                   sourceMode === "preset"
                     ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
                     : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
@@ -212,7 +212,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setSourceMode("upload")}
-                className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-semibold transition-colors text-center whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
                   sourceMode === "upload"
                     ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
                     : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
@@ -222,7 +222,7 @@ export default function Home() {
               </button>
             </div>
 
-            <span className="text-[11px] text-[var(--color-muted)] font-mono">
+            <span className="text-[10px] sm:text-[11px] text-[var(--color-muted)] font-mono">
               {sourceMode === "preset"
                 ? "One-click test documents: zero quota consumed"
                 : "Client-side resize and PII masking before transmission"}
@@ -243,17 +243,17 @@ export default function Home() {
           )}
 
           {/* Action Row: Language Selector + Analyze Document CTA */}
-          <div className="pt-4 border-t border-[var(--color-rule)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-[var(--color-muted)]">Language:</span>
-              <div className="flex items-center gap-1 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)]">
+          <div className="pt-3.5 sm:pt-4 border-t border-[var(--color-rule)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center justify-between sm:justify-start gap-2">
+              <span className="text-xs font-medium text-[var(--color-muted)] shrink-0">Language:</span>
+              <div className="grid grid-cols-3 sm:flex items-center gap-1 bg-[var(--color-paper-2)] p-1 rounded-[var(--radius-input)] border border-[var(--color-rule)] flex-1 sm:flex-none">
                 <button
                   type="button"
                   disabled={isAnalyzing}
                   onClick={() => setLanguage("en")}
-                  className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors text-center whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
                     language === "en"
-                      ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                      ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
                       : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
                   }`}
                 >
@@ -263,9 +263,9 @@ export default function Home() {
                   type="button"
                   disabled={isAnalyzing}
                   onClick={() => setLanguage("hi")}
-                  className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors text-center whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
                     language === "hi"
-                      ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                      ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
                       : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
                   }`}
                 >
@@ -275,9 +275,9 @@ export default function Home() {
                   type="button"
                   disabled={isAnalyzing}
                   onClick={() => setLanguage("hinglish")}
-                  className={`px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-[calc(var(--radius-input)-2px)] text-xs font-medium transition-colors text-center whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] cursor-pointer ${
                     language === "hinglish"
-                      ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs"
+                      ? "bg-[var(--color-cotton)] text-[var(--color-ink)] shadow-xs font-semibold"
                       : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
                   }`}
                 >
@@ -286,9 +286,9 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               {docName && (
-                <span className="text-xs text-[var(--color-muted)] truncate max-w-xs hidden md:inline">
+                <span className="text-xs text-[var(--color-muted)] truncate max-w-xs hidden lg:inline">
                   Ready: <strong className="font-medium text-[var(--color-ink)]">{docName}</strong>
                 </span>
               )}
@@ -296,7 +296,7 @@ export default function Home() {
                 type="button"
                 disabled={(!imageBase64 && !selectedDemoId) || isAnalyzing}
                 onClick={runAnalysis}
-                className={`py-2.5 px-6 rounded-[var(--radius-input)] text-xs font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap shadow-xs focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
+                className={`w-full sm:w-auto py-2.5 px-6 rounded-[var(--radius-input)] text-xs font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap shadow-xs focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
                   (!imageBase64 && !selectedDemoId) || isAnalyzing
                     ? "bg-[var(--color-paper-3)] text-[var(--color-muted)] cursor-not-allowed"
                     : "bg-[var(--color-ink)] hover:bg-[var(--color-ink-2)] text-[var(--color-paper)] cursor-pointer"
@@ -438,18 +438,18 @@ export default function Home() {
       </main>
 
       {/* Editorial Masthead Footer */}
-      <footer className="border-t border-[var(--color-rule)] bg-[var(--color-paper-2)] py-8 mt-12 text-xs text-[var(--color-muted)]">
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <footer className="border-t border-[var(--color-rule)] bg-[var(--color-paper-2)] py-6 sm:py-8 mt-10 sm:mt-12 text-xs text-[var(--color-muted)]">
+        <div className="max-w-[1440px] mx-auto px-3.5 sm:px-6 md:px-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center sm:text-left">
             <p className="font-semibold text-[var(--color-ink)]">
               DastaaVault: Indian legal and tax document reviewer
             </p>
-            <p>
+            <p className="text-[11px] sm:text-xs">
               Built for BharatCode Build League 2026. Grounded on Income Tax Act 1961, Income Tax Act 2025, and Registration Act 1908.
             </p>
           </div>
 
-          <div className="flex items-center gap-4 text-[var(--color-ink-2)] font-mono text-[11px]">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-4 text-[var(--color-ink-2)] font-mono text-[11px]">
             <a
               href="https://github.com/Anhad-Sharma-26/dastaavault"
               target="_blank"

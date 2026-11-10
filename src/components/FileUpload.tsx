@@ -83,7 +83,7 @@ export function FileUpload({ onImageReady, disabled }: FileUploadProps) {
         onClick={() => {
           if (!disabled && !isProcessing) inputRef.current?.click();
         }}
-        className={`relative border border-dashed rounded-[var(--radius-input)] p-5 text-center cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
+        className={`relative border border-dashed rounded-[var(--radius-input)] p-3.5 sm:p-5 text-center cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[var(--color-focus)] ${
           isDragging
             ? "border-[var(--color-accent-2)] bg-[var(--color-paper-2)]"
             : "border-[var(--color-rule-2)] bg-[var(--color-cotton)] hover:bg-[var(--color-paper-2)]"
